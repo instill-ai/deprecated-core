@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  api_gateway:
+    image: ${API_GATEWAY_IMAGE}:${API_GATEWAY_VERSION}
+    build:
+      context: ./${API_GATEWAY_HOST}
+      args:
+        SERVICE_NAME: ${API_GATEWAY_HOST}
+        GOLANG_VERSION: ${GOLANG_VERSION}
+        ALPINE_VERSION: ${ALPINE_VERSION}
+        KRAKEND_CE_VERSION: ${KRAKEND_CE_VERSION}
+
+  mgmt_backend:
+    image: ${MGMT_BACKEND_IMAGE}:${MGMT_BACKEND_VERSION}
+    build:
+      context: ./${MGMT_BACKEND_HOST}
+      args:
+        SERVICE_NAME: ${MGMT_BACKEND_HOST}
+        GOLANG_VERSION: ${GOLANG_VERSION}
+        K6_VERSION: ${K6_VERSION}

@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  api_gateway:
+    profiles:
+      - all
+      - mgmt
+    image: ${API_GATEWAY_IMAGE}:latest
+    environment:
+      API_GATEWAY_LOG_LEVEL: DEBUG
+
+  mgmt_backend_migrate:
+    profiles:
+      - all
+      - api-gateway
+    image: ${MGMT_BACKEND_IMAGE}:latest
+
+  mgmt_backend_init:
+    profiles:
+      - all
+      - api-gateway
+    image: ${MGMT_BACKEND_IMAGE}:latest
+
+  mgmt_backend:
+    profiles:
+      - all
+      - api-gateway
+    image: ${MGMT_BACKEND_IMAGE}:latest
+    environment:
+      CFG_SERVER_DEBUG: "true"
+      CFG_SERVER_EDITION: ${EDITION}
+    ports:
+      - ${MGMT_BACKEND_PRIVATEPORT}:${MGMT_BACKEND_PRIVATEPORT}
+      - ${MGMT_BACKEND_PUBLICPORT}:${MGMT_BACKEND_PUBLICPORT}
+
+  pg_sql:
+    ports:
+      - ${POSTGRESQL_PORT}:5432
+
+  temporal:
+    ports:
+      - ${TEMPORAL_PORT}:7233
+
+  temporal_ui:
+    ports:
+      - ${TEMPORAL_UI_PORT}:8080
+
+  redis:
+    ports:
+      - ${REDIS_PORT}:6379
+
+  etcd:
+    ports:
+      - ${ETCD_CLIENT_PORT}:${ETCD_CLIENT_PORT}

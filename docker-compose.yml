@@ -1,0 +1,178 @@
+version: "3.9"
+
+networks:
+  default:
+    name: instill-network
+
+services:
+  api_gateway:
+    container_name: ${API_GATEWAY_HOST}
+    image: ${API_GATEWAY_IMAGE}:${API_GATEWAY_VERSION}
+    restart: unless-stopped
+    environment:
+      API_GATEWAY_HOST: ${API_GATEWAY_HOST}
+      API_GATEWAY_PORT: ${API_GATEWAY_PORT}
+      API_GATEWAY_STATS_PORT: ${API_GATEWAY_STATS_PORT}
+      API_GATEWAY_METRICS_PORT: ${API_GATEWAY_METRICS_PORT}
+      API_GATEWAY_LOG_LEVEL: INFO
+      MGMT_BACKEND_HOST: ${MGMT_BACKEND_HOST}
+      MGMT_BACKEND_PUBLICPORT: ${MGMT_BACKEND_PUBLICPORT}
+      INFLUXDB_HOST: ${INFLUXDB_HOST}
+      INFLUXDB_PORT: ${INFLUXDB_PORT}
+      JAEGER_ENABLED: ${OBSERVE_ENABLED}
+      JAEGER_HOST: ${JAEGER_HOST}
+      JAEGER_PORT: ${JAEGER_LISTEN_THRIFT_PORT}
+    ports:
+      - ${API_GATEWAY_PORT}:${API_GATEWAY_PORT}
+      - ${API_GATEWAY_STATS_PORT}:${API_GATEWAY_STATS_PORT}
+      - ${API_GATEWAY_METRICS_PORT}:${API_GATEWAY_METRICS_PORT}
+    command: /bin/bash -c "
+      envsubst <config/.env.envsubst >config/.env &&
+      make config &&
+      krakend run -c krakend.json"
+    depends_on:
+      mgmt_backend:
+        condition: service_started
+
+  mgmt_backend_migrate:
+    container_name: ${MGMT_BACKEND_HOST}-migrate
+    image: ${MGMT_BACKEND_IMAGE}:${MGMT_BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
+      CFG_LOG_EXTERNAL: ${OBSERVE_ENABLED}
+      CFG_LOG_OTELCOLLECTOR_PORT: ${OTEL_COLLECTOR_PORT}
+    entrypoint: ./mgmt-backend-migrate
+    depends_on:
+      pg_sql:
+        condition: service_healthy
+
+  mgmt_backend_init:
+    container_name: ${MGMT_BACKEND_HOST}-init
+    image: ${MGMT_BACKEND_IMAGE}:${MGMT_BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_LOG_EXTERNAL: ${OBSERVE_ENABLED}
+      CFG_LOG_OTELCOLLECTOR_PORT: ${OTEL_COLLECTOR_PORT}
+    entrypoint: ./mgmt-backend-init
+    depends_on:
+      - mgmt_backend_migrate
+
+  mgmt_backend:
+    container_name: ${MGMT_BACKEND_HOST}
+    image: ${MGMT_BACKEND_IMAGE}:${MGMT_BACKEND_VERSION}
+    restart: unless-stopped
+    environment:
+      CFG_SERVER_PRIVATEPORT: ${MGMT_BACKEND_PRIVATEPORT}
+      CFG_SERVER_PUBLICPORT: ${MGMT_BACKEND_PUBLICPORT}
+      CFG_SERVER_DEBUG: "false"
+      CFG_SERVER_USAGE_ENABLED: ${USAGE_ENABLED}
+      CFG_SERVER_EDITION: ${EDITION:-local-ce:unknown}
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_LOG_EXTERNAL: ${OBSERVE_ENABLED}
+      CFG_LOG_OTELCOLLECTOR_PORT: ${OTEL_COLLECTOR_PORT}
+    entrypoint: ./mgmt-backend
+    depends_on:
+      - mgmt_backend_init
+
+  pg_sql:
+    container_name: ${POSTGRESQL_HOST}
+    image: ${POSTGRESQL_IMAGE}:${POSTGRESQL_VERSION}-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      timeout: 20s
+      retries: 10
+
+  elasticsearch:
+    container_name: ${ELASTICSEARCH_HOST}
+    image: ${ELASTICSEARCH_IMAGE}:${ELASTICSEARCH_VERSION}
+    restart: unless-stopped
+    environment:
+      - cluster.routing.allocation.disk.threshold_enabled=true
+      - cluster.routing.allocation.disk.watermark.low=512mb
+      - cluster.routing.allocation.disk.watermark.high=256mb
+      - cluster.routing.allocation.disk.watermark.flood_stage=128mb
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - xpack.security.enabled=false
+    volumes:
+      - /var/lib/elasticsearch/data
+
+  temporal:
+    container_name: temporal
+    image: ${TEMPORAL_IMAGE}:${TEMPORAL_VERSION}
+    restart: unless-stopped
+    environment:
+      DB: postgresql
+      DB_PORT: ${POSTGRESQL_PORT}
+      POSTGRES_USER: postgres
+      POSTGRES_PWD: password
+      POSTGRES_SEEDS: ${POSTGRESQL_HOST}
+      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/docker.yaml
+      ENABLE_ES: "true"
+      ES_SEEDS: elasticsearch
+      ES_VERSION: v7
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "workflow", "list"]
+      interval: 10s
+      timeout: 1m
+      retries: 10
+    depends_on:
+      - pg_sql
+      - elasticsearch
+
+  temporal_ui:
+    container_name: ${TEMPORAL_UI_HOST}
+    image: ${TEMPORAL_UI_IMAGE}:${TEMPORAL_UI_VERSION}
+    restart: unless-stopped
+    environment:
+      TEMPORAL_ADDRESS: ${TEMPORAL_HOST}:${TEMPORAL_PORT}
+    ports:
+      - ${TEMPORAL_UI_PORT}:8080
+    depends_on:
+      - temporal
+
+  redis:
+    container_name: ${REDIS_HOST}
+    image: ${REDIS_IMAGE}:${REDIS_VERSION}-alpine${ALPINE_VERSION}
+    restart: unless-stopped
+    environment:
+      ALLOW_EMPTY_PASSWORD: "true"
+
+  redoc_openapi:
+    container_name: redoc-openapi
+    image: ${REDOC_IMAGE}:${REDOC_OPENAPI_VERSION}
+    environment:
+      - SPEC_URL=https://raw.githubusercontent.com/instill-ai/protobufs/main/openapiv2/openapiv2.swagger.yaml
+    ports:
+      - ${REDOC_OPENAPI_PORT}:80
+
+  etcd:
+    container_name: ${ETCD_HOST}
+    image: ${ETCD_IMAGE}:v${ETCD_VERSION}
+    restart: unless-stopped
+    environment:
+      ETCD_NAME: ${ETCD_HOST}
+      ETCD_ADVERTISE_CLIENT_URLS: http://${ETCD_HOST}:${ETCD_CLIENT_PORT}
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:${ETCD_CLIENT_PORT}
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://${ETCD_HOST}:${ETCD_PEER_PORT}
+      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:${ETCD_PEER_PORT}
+      ETCD_INITIAL_CLUSTER_TOKEN: ${ETCD_CLUSTER_TOKEN}
+      ETCD_INITIAL_CLUSTER_STATE: ${ETCD_CLUSTER_STATE}
+      ETCD_INITIAL_CLUSTER: ${ETCD_HOST}=http://${ETCD_HOST}:${ETCD_PEER_PORT}
+      ETCDCTL_API: ${ETCDCTL_API}
+      ETCD_AUTO_COMPACTION_MODE: ${ETCD_AUTO_COMPACTION_MODE}
+      ETCD_AUTO_COMPACTION_RETENTION: ${ETCD_AUTO_COMPACTION_RETENTION}

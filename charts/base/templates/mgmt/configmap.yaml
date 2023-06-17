@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "base.mgmt" . }}
+  labels:
+    {{- include "base.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mgmt
+data:
+  config.yaml: |+
+    server:
+      privateport: {{ template "base.mgmt.privatePort" . }}
+      publicport: {{ template "base.mgmt.publicPort" . }}
+      edition: {{ .Values.edition }}
+      usage:
+        {{- toYaml .Values.usage | nindent 8 }}
+      debug: {{ ternary "true" "false" (eq (.Values.logLevel | upper) "DEBUG") }}
+      {{- if .Values.internalTLS.enabled }}
+      https:
+        cert: /etc/instill-ai/base/ssl/mgmt/tls.crt
+        key: /etc/instill-ai/base/ssl/mgmt/tls.key
+      {{- end }}
+    database:
+      username: {{ default (include "base.database.username" .) .Values.database.external.username }}
+      password: {{ default (include "base.database.rawPassword" .) .Values.database.external.password }}
+      host: {{ default (include "base.database.host" .) .Values.database.external.host }}
+      port: {{ default (include "base.database.port" .) .Values.database.external.port }}
+      name: mgmt
+      version: {{ .Values.mgmt.dbVersion }}
+      timezone: Etc/UTC
+      pool:
+        idleconnections: {{ .Values.database.maxIdleConns }}
+        maxconnections: {{ .Values.database.maxOpenConns }}
+        connlifetime: {{ .Values.database.maxConnLifeTime }}
+    cache:
+      redis:
+        redisoptions:
+          addr: {{ default (include "base.redis.addr" .) .Values.redis.external.addr }}

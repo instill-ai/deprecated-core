@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "base.apigateway" . }}
+data:
+  .env: |-
+    # api-gateway
+    API_GATEWAY_HOST={{ template "base.apigateway" . }}
+    API_GATEWAY_PORT={{ template "base.apigateway.httpPort" . }}
+    API_GATEWAY_STATS_PORT={{ template "base.apigateway.statsPort" . }}
+    API_GATEWAY_METRICS_PORT={{ template "base.apigateway.metricsPort" . }}
+    API_GATEWAY_LOG_LEVEL={{ upper .Values.logLevel }}
+    {{- if .Values.apigateway.enableTLS }}
+    API_GATEWAY_CERT_FILE=/etc/instill-ai/base/ssl/api-gateway/tls.crt
+    API_GATEWAY_KEY_FILE=/etc/instill-ai/base/ssl/api-gateway/tls.key
+    {{- end }}
+
+    # mgmt-backend
+    MGMT_BACKEND_HOST={{ template "base.mgmt" . }}
+    MGMT_BACKEND_PUBLICPORT={{ template "base.mgmt.publicPort" . }}
+
+    # influxdb
+    INFLUXDB_HOST={{ template "base.influxdb" . }}
+    INFLUXDB_PORT={{ template "base.influxdb.port" . }}
+
+    # jaeger
+    JAEGER_ENABLE={{ .Values.jaeger.enabled }}
+    JAEGER_HOST={{ template "base.jaeger" . }}
+    JAEGER_PORT={{ template "base.jaeger.port" . }}
