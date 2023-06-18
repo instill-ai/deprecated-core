@@ -5,6 +5,7 @@ services:
     profiles:
       - all
       - mgmt
+      - console
     image: ${API_GATEWAY_IMAGE}:latest
     environment:
       API_GATEWAY_LOG_LEVEL: DEBUG
@@ -13,18 +14,21 @@ services:
     profiles:
       - all
       - api-gateway
+      - console
     image: ${MGMT_BACKEND_IMAGE}:latest
 
   mgmt_backend_init:
     profiles:
       - all
       - api-gateway
+      - console
     image: ${MGMT_BACKEND_IMAGE}:latest
 
   mgmt_backend:
     profiles:
       - all
       - api-gateway
+      - console
     image: ${MGMT_BACKEND_IMAGE}:latest
     environment:
       CFG_SERVER_DEBUG: "true"
@@ -32,6 +36,19 @@ services:
     ports:
       - ${MGMT_BACKEND_PRIVATEPORT}:${MGMT_BACKEND_PRIVATEPORT}
       - ${MGMT_BACKEND_PUBLICPORT}:${MGMT_BACKEND_PUBLICPORT}
+
+  console:
+    profiles:
+      - all
+      - api-gatewayl
+      - mgmt
+    image: ${CONSOLE_IMAGE}:latest
+    environment:
+      NEXT_PUBLIC_USAGE_COLLECTION_ENABLED: ${USAGE_ENABLED}
+      NEXT_PUBLIC_CONSOLE_EDITION: ${EDITION}
+      NODE_ENV: development
+    ports:
+      - ${CONSOLE_PORT}:${CONSOLE_PORT}
 
   pg_sql:
     ports:

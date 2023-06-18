@@ -19,3 +19,16 @@ services:
         SERVICE_NAME: ${MGMT_BACKEND_HOST}
         GOLANG_VERSION: ${GOLANG_VERSION}
         K6_VERSION: ${K6_VERSION}
+
+  console:
+    image: ${CONSOLE_IMAGE}:${CONSOLE_VERSION}
+    build:
+      context: ./${CONSOLE_HOST}
+
+  console_playwright:
+    image: ${CONSOLE_IMAGE}-playwright:${CONSOLE_VERSION}
+    build:
+      context: ./${CONSOLE_HOST}
+      dockerfile: Dockerfile.playwright
+      args:
+        TEST_USER: "root"
