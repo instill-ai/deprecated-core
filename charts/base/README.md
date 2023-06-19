@@ -2,7 +2,7 @@
 
 ![Version: 0.1.0-alpha](https://img.shields.io/badge/Version-0.1.0--alpha-informational?style=flat-square) ![AppVersion: 0.1.0-alpha](https://img.shields.io/badge/AppVersion-0.1.0--alpha-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-Instill Base provides the base services for Instill VDP and Instill Model.
+The Helm chart of Instill Base
 
 # Requirements
 
@@ -21,7 +21,7 @@ Instill Base provides the base services for Instill VDP and Instill Model.
 Once Helm has been set up correctly, add the repo as follows:
 
 ```bash
-helm repo add instill https://helm.instill.tech
+helm repo add instill-ai https://helm.instill.tech
 ```
 
 If you had already added this repo earlier, run `helm repo update` to retrieve
@@ -30,7 +30,7 @@ the latest versions of the packages.  You can then run `helm search repo base --
 To install the chart (alpha version):
 
 ```bash
-helm install <release-name> instill/base --devel
+helm install <release-name> instill-ai/base --devel
 ```
 
 ## Uninstall
