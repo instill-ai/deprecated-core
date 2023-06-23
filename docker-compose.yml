@@ -5,7 +5,7 @@ networks:
     name: instill-network
 
 services:
-  api_gateway:
+  api_gateway_base:
     container_name: ${API_GATEWAY_HOST}
     image: ${API_GATEWAY_IMAGE}:${API_GATEWAY_VERSION}
     restart: unless-stopped
@@ -103,7 +103,7 @@ services:
       - ${CONSOLE_PORT}:${CONSOLE_PORT}
     entrypoint: ./entrypoint.sh
     depends_on:
-      - api_gateway
+      - api_gateway_base
 
   pg_sql:
     container_name: ${POSTGRESQL_HOST}

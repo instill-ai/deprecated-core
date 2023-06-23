@@ -1,10 +1,10 @@
 version: "3.9"
 
 services:
-  api_gateway:
+  api_gateway_base:
     image: ${API_GATEWAY_IMAGE}:${API_GATEWAY_VERSION}
     build:
-      context: ./${API_GATEWAY_HOST}
+      context: ./api-gateway
       args:
         SERVICE_NAME: ${API_GATEWAY_HOST}
         GOLANG_VERSION: ${GOLANG_VERSION}

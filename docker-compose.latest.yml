@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  api_gateway:
+  api_gateway_base:
     profiles:
       - all
       - mgmt
@@ -57,10 +57,6 @@ services:
   temporal:
     ports:
       - ${TEMPORAL_PORT}:7233
-
-  temporal_ui:
-    ports:
-      - ${TEMPORAL_UI_PORT}:8080
 
   redis:
     ports:

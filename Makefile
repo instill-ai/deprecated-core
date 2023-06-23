@@ -15,7 +15,7 @@ UNAME_S := $(shell uname -s)
 
 CONTAINER_BUILD_NAME := base-build
 CONTAINER_COMPOSE_IMAGE_NAME := instill/base-compose
-CONTAINER_PLAYWRIGHT_IMAGE_NAME := instill/console-playwright
+CONTAINER_PLAYWRIGHT_IMAGE_NAME := instill/base-console-playwright
 CONTAINER_BACKEND_INTEGRATION_TEST_NAME := base-backend-integration-test
 CONTAINER_CONSOLE_INTEGRATION_TEST_NAME := base-console-integration-test
 
@@ -248,6 +248,10 @@ ifeq ($(UNAME_S),Linux)
 	@pkill -f "port-forward"
 	@make down
 endif
+
+# ==================================================================
+# ==================== Console Integration Test ====================
+# ==================================================================
 
 .PHONY: console-integration-test-latest
 console-integration-test-latest:			## Run console integration test on the latest Instill Base
