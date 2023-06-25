@@ -55,9 +55,9 @@ jobs:
       - name: Run ${{ inputs.component }} integration test (latest)
         if: inputs.target == 'latest'
         run: |
-          git clone https://github.com/instill-ai/${{ inputs.component }}.git
+          git clone -b pinglin/ins-686-migrate-all-model-backend-related-functionalities-to-new https://github.com/instill-ai/${{ inputs.component }}.git
           cd ${{ inputs.component }}
-          make integration-test API_GATEWAY_HOST=${API_GATEWAY_HOST} API_GATEWAY_PORT=${API_GATEWAY_PORT}
+          make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_PORT}
 
       - name: Uppercase component name
         if: inputs.target == 'release'
@@ -80,4 +80,4 @@ jobs:
         run: |
           git clone -b v$COMPONENT_VERSION https://github.com/instill-ai/${{ inputs.component }}.git
           cd ${{ inputs.component }}
-          make integration-test API_GATEWAY_HOST=${API_GATEWAY_HOST} API_GATEWAY_PORT=${API_GATEWAY_PORT}
+          make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_PORT}
