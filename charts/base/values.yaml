@@ -200,9 +200,9 @@ apigateway:
   image:
     repository: instill/api-gateway
     tag: 0.2.7-alpha
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   # -- The path of configuration file for api-gateway
-  configPath: /api-gateway/config/.env
+  configPath: /api-gateway-base/config/.env
   # -- Enable TLS for api-gateway or not
   enableTLS: false
   # -- Set the service account to be used, default if left empty
@@ -255,7 +255,7 @@ mgmt:
   image:
     repository: instill/mgmt-backend
     tag: 0.3.9-alpha
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   # -- The command names to be executed
   commandName:
     migration: mgmt-backend-migrate
@@ -318,7 +318,7 @@ console:
   image:
     repository: instill/console
     tag: 0.24.0-alpha
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   # -- The accessible endpoint for the api-gateway from the console server side
   serverApiGatewayBaseUrl:
   # -- Set the service account to be used, default if left empty
@@ -781,7 +781,6 @@ influxdb2:
         influx v1 dbrp create --db ${DOCKER_INFLUXDB_INIT_BUCKET} --rp ${DOCKER_INFLUXDB_INIT_RETENTION} --bucket-id ${BUCKET_ID} --default
         influx v1 auth create --username ${DOCKER_INFLUXDB_INIT_USERNAME} --password ${DOCKER_INFLUXDB_INIT_PASSWORD} --write-bucket ${BUCKET_ID} --org ${DOCKER_INFLUXDB_INIT_ORG}
 jaeger:
-  enabled: true
   provisionDataStore:
     cassandra: false
   storage:
@@ -801,7 +800,6 @@ jaeger:
             while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://base-elasticsearch-master:9200)" != "200" ]]; do echo waiting for elasticsearch; sleep 1; done
 
 opentelemetry-collector:
-  enabled: true
   mode: deployment
   ports:
     jaeger-compact:
@@ -879,7 +877,6 @@ opentelemetry-collector:
           exporters:
             - logging
 prometheus:
-  enabled: true
   prometheus-node-exporter:
     enabled: false
   global:
@@ -892,7 +889,6 @@ prometheus:
             - "http://base-opentelemetry-collector:9001"
             - "http://base-apigateway:9000"
 grafana:
-  enabled: true
   adminPassword: password
   dashboards:
     default:

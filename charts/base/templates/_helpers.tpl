@@ -152,11 +152,11 @@ app.kubernetes.io/name: {{ include "base.name" . }}
 {{- end -}}
 
 {{- define "base.mgmt" -}}
-  {{- printf "%s-mgmt" (include "base.fullname" .) -}}
+  {{- printf "%s-mgmt-backend" (include "base.fullname" .) -}}
 {{- end -}}
 
 {{- define "base.mgmt.migration" -}}
-  {{- printf "%s-migration" (include "base.mgmt" .) -}}
+  {{- printf "%s-mgmt-backend-migration" (include "base.mgmt" .) -}}
 {{- end -}}
 
 {{- define "base.console" -}}
