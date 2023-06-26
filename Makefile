@@ -26,8 +26,8 @@ HELM_RELEASE_NAME := base
 
 .PHONY: all
 all:			## Launch all services with their up-to-date release version
-	EDITION=local-ce docker compose ${COMPOSE_FILES} up -d --quiet-pull
-	EDITION=local-ce docker compose ${COMPOSE_FILES} rm -f
+	@EDITION=local-ce docker compose ${COMPOSE_FILES} up -d --quiet-pull
+	@EDITION=local-ce docker compose ${COMPOSE_FILES} rm -f
 
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
