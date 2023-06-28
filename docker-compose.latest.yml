@@ -6,6 +6,13 @@ services:
       - all
       - mgmt
       - console
+      - api-gateway-vdp
+      - pipeline
+      - connector
+      - controller-vdp
+      - api-gateway-model
+      - model
+      - controller-model
     image: ${API_GATEWAY_IMAGE}:latest
     environment:
       API_GATEWAY_LOG_LEVEL: DEBUG
@@ -13,22 +20,43 @@ services:
   mgmt_backend_migrate:
     profiles:
       - all
-      - api-gateway
+      - api-gateway-base
       - console
+      - api-gateway-vdp
+      - pipeline
+      - connector
+      - controller-vdp
+      - api-gateway-model
+      - model
+      - controller-model
     image: ${MGMT_BACKEND_IMAGE}:latest
 
   mgmt_backend_init:
     profiles:
       - all
-      - api-gateway
+      - api-gateway-base
       - console
+      - api-gateway-vdp
+      - pipeline
+      - connector
+      - controller-vdp
+      - api-gateway-model
+      - model
+      - controller-model
     image: ${MGMT_BACKEND_IMAGE}:latest
 
   mgmt_backend:
     profiles:
       - all
-      - api-gateway
+      - api-gateway-base
       - console
+      - api-gateway-vdp
+      - pipeline
+      - connector
+      - controller-vdp
+      - api-gateway-model
+      - model
+      - controller-model
     image: ${MGMT_BACKEND_IMAGE}:latest
     environment:
       CFG_SERVER_DEBUG: "true"
@@ -40,8 +68,15 @@ services:
   console:
     profiles:
       - all
-      - api-gatewayl
+      - api-gateway-base
       - mgmt
+      - api-gateway-vdp
+      - pipeline
+      - connector
+      - controller-vdp
+      - api-gateway-model
+      - model
+      - controller-model
     image: ${CONSOLE_IMAGE}:latest
     environment:
       NEXT_PUBLIC_USAGE_COLLECTION_ENABLED: ${USAGE_ENABLED}
