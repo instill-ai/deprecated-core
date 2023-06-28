@@ -13,7 +13,7 @@ services:
       DOCKER_INFLUXDB_INIT_RETENTION: 1w
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: i-love-instill-ai
     volumes:
-      - ${OBSERVE_CONFIG_PATH}/influxdb:/docker-entrypoint-initdb.d
+      - ${OBSERVE_CONFIG_DIR_PATH}/influxdb:/docker-entrypoint-initdb.d
     ports:
       - ${INFLUXDB_PORT}:8086
 
@@ -22,7 +22,7 @@ services:
     image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_VERSION}
     command: --config=/configs/otel-collector/config.yaml
     volumes:
-      - ${OBSERVE_CONFIG_PATH}:/configs
+      - ${OBSERVE_CONFIG_DIR_PATH}:/configs
     depends_on:
       - jaeger
       - prometheus
@@ -39,7 +39,7 @@ services:
     command:
       - --config.file=/configs/prometheus/config.yaml
     volumes:
-      - ${OBSERVE_CONFIG_PATH}:/configs
+      - ${OBSERVE_CONFIG_DIR_PATH}:/configs
     ports:
       - ${PROMETHEUS_WEB_PORT}:9090
 
@@ -47,8 +47,8 @@ services:
     container_name: ${GRAFANA_HOST}
     image: ${GRAFANA_IMAGE}:${GRAFANA_VERSION}
     volumes:
-      - ${OBSERVE_CONFIG_PATH}/grafana/datasources/all.yml:/etc/grafana/provisioning/datasources/all.yml
-      - ${OBSERVE_CONFIG_PATH}/grafana/dashboards/all.yml:/etc/grafana/provisioning/dashboards/all.yml
-      - ${OBSERVE_CONFIG_PATH}/grafana/krakend:/var/lib/grafana/dashboards/krakend
+      - ${OBSERVE_CONFIG_DIR_PATH}/grafana/datasources/all.yml:/etc/grafana/provisioning/datasources/all.yml
+      - ${OBSERVE_CONFIG_DIR_PATH}/grafana/dashboards/all.yml:/etc/grafana/provisioning/dashboards/all.yml
+      - ${OBSERVE_CONFIG_DIR_PATH}/grafana/krakend:/var/lib/grafana/dashboards/krakend
     ports:
       - ${GRAFANA_PORT}:3000
