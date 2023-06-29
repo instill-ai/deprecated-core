@@ -103,7 +103,7 @@ build-latest:				## Build latest images for all Instill Base components
 		-v ${BUILD_CONFIG_DIR_PATH}/docker-compose.build.yml:/instill-ai/base/docker-compose.build.yml \
 		--name ${CONTAINER_BUILD_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			API_GATEWAY_VERSION=latest \
+			API_GATEWAY_BASE_VERSION=latest \
 			MGMT_BACKEND_VERSION=latest \
 			CONSOLE_VERSION=latest \
 			docker compose -f docker-compose.build.yml build --progress plain \
@@ -116,7 +116,7 @@ build-release:				## Build release images for all Instill Base components
 		--build-arg GOLANG_VERSION=${GOLANG_VERSION} \
 		--build-arg K6_VERSION=${K6_VERSION} \
 		--build-arg CACHE_DATE="$(shell date)" \
-		--build-arg API_GATEWAY_VERSION=${API_GATEWAY_VERSION} \
+		--build-arg API_GATEWAY_BASE_VERSION=${API_GATEWAY_BASE_VERSION} \
 		--build-arg MGMT_BACKEND_VERSION=${MGMT_BACKEND_VERSION} \
 		--build-arg CONSOLE_VERSION=${CONSOLE_VERSION} \
 		--target release \
@@ -127,7 +127,7 @@ build-release:				## Build release images for all Instill Base components
 		-v ${BUILD_CONFIG_DIR_PATH}/docker-compose.build.yml:/instill-ai/base/docker-compose.build.yml \
 		--name ${CONTAINER_BUILD_NAME}-release \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			API_GATEWAY_VERSION=${API_GATEWAY_VERSION} \
+			API_GATEWAY_BASE_VERSION=${API_GATEWAY_BASE_VERSION} \
 			MGMT_BACKEND_VERSION=${MGMT_BACKEND_VERSION} \
 			CONSOLE_VERSION=${CONSOLE_VERSION} \
 			docker compose -f docker-compose.build.yml build --progress plain \
@@ -136,26 +136,26 @@ build-release:				## Build release images for all Instill Base components
 .PHONY: integration-test-latest
 integration-test-latest:			## Run integration test on the latest Instill Base
 	@make build-latest
-	@COMPOSE_PROFILES=all EDITION=local-ce:test ITMODE_ENABLED=true docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 	@docker run -it --rm \
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=${API_GATEWAY_HOST} API_GATEWAY_PORT=${API_GATEWAY_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=${API_GATEWAY_BASE_HOST} API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 	@make down
 
 .PHONY: integration-test-release
 integration-test-release:			## Run integration test on the release Instill Base
 	@make build-release
-	@EDITION=local-ce:test ITMODE_ENABLED=true docker compose up -d --quiet-pull
+	@EDITION=local-ce:test docker compose up -d --quiet-pull
 	@EDITION=local-ce:test docker compose rm -f
 	@docker run -it --rm \
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-release \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=${API_GATEWAY_HOST} API_GATEWAY_PORT=${API_GATEWAY_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=${API_GATEWAY_BASE_HOST} API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 	@make down
 
@@ -163,20 +163,19 @@ integration-test-release:			## Run integration test on the release Instill Base
 helm-integration-test-latest:                       ## Run integration test on the Helm latest for Instill Base
 ifeq ($(UNAME_S),Darwin)
 	@make build-latest
-	@helm install ${HELM_RELEASE_NAME} charts/base --devel --namespace instill-ai --create-namespace \
-		--set itMode=true \
+	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apigateway.image.tag=latest \
-		--set mgmt.image.tag=latest \
+		--set apiGatewayBase.image.tag=latest \
+		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
 		--set tags.observability=false \
-		--set apigatewayURL=http://host.docker.internal:${API_GATEWAY_PORT}
-	@kubectl rollout status deployment base-apigateway -n instill-ai --timeout=120s
-	@export APIGATEWAY_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${APIGATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
-	@docker run -it --rm -p ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=host.docker.internal API_GATEWAY_PORT=${API_GATEWAY_PORT}' \
+		--set apiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_BASE_PORT}
+	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
+	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+	@docker run -it --rm -p ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=host.docker.internal API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
 	@kubectl delete namespace instill-ai
@@ -185,20 +184,19 @@ ifeq ($(UNAME_S),Darwin)
 endif
 ifeq ($(UNAME_S),Linux)
 	@make build-latest
-	@helm install ${HELM_RELEASE_NAME} charts/base --devel --namespace instill-ai --create-namespace \
-		--set itMode=true \
+	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apigateway.image.tag=latest \
-		--set mgmt.image.tag=latest \
+		--set apiGatewayBase.image.tag=latest \
+		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
 		--set tags.observability=false \
-		--set apigatewayURL=http://localhost:${API_GATEWAY_PORT}
-	@kubectl rollout status deployment base-apigateway -n instill-ai --timeout=120s
-	@export APIGATEWAY_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${APIGATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+		--set apiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT}
+	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
+	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@docker run -it --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
 	@kubectl delete namespace instill-ai
@@ -210,20 +208,19 @@ endif
 helm-integration-test-release:                       ## Run integration test on the Helm release for Instill Base
 ifeq ($(UNAME_S),Darwin)
 	@make build-release
-	@helm install ${HELM_RELEASE_NAME} charts/base --devel --namespace instill-ai --create-namespace \
-		--set itMode=true \
+	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apigateway.image.tag=${API_GATEWAY_VERSION} \
-		--set mgmt.image.tag=${MGMT_BACKEND_VERSION} \
+		--set apiGatewayBase.image.tag=${API_GATEWAY_BASE_VERSION} \
+		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
 		--set tags.observability=false \
-		--set apigatewayURL=http://host.docker.internal:${API_GATEWAY_PORT}
-	@kubectl rollout status deployment base-apigateway -n instill-ai --timeout=120s
-	@export APIGATEWAY_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${APIGATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
-	@docker run -it --rm -p ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=host.docker.internal API_GATEWAY_PORT=${API_GATEWAY_PORT}' \
+		--set apiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_BASE_PORT}
+	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
+	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+	@docker run -it --rm -p ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=host.docker.internal API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
 	@kubectl delete namespace instill-ai
@@ -232,20 +229,19 @@ ifeq ($(UNAME_S),Darwin)
 endif
 ifeq ($(UNAME_S),Linux)
 	@make build-release
-	@helm install ${HELM_RELEASE_NAME} charts/base --devel --namespace instill-ai --create-namespace \
-		--set itMode=true \
+	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apigateway.image.tag=${API_GATEWAY_VERSION} \
-		--set mgmt.image.tag=${MGMT_BACKEND_VERSION} \
+		--set apiGatewayBase.image.tag=${API_GATEWAY_BASE_VERSION} \
+		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
 		--set tags.observability=false \
-		--set apigatewayURL=http://localhost:${API_GATEWAY_PORT}
-	@kubectl rollout status deployment base-apigateway -n instill-ai --timeout=120s
-	@export APIGATEWAY_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${APIGATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+		--set apiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT}
+	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
+	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@docker run -it --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
 	@kubectl delete namespace instill-ai
@@ -260,11 +256,11 @@ endif
 .PHONY: console-integration-test-latest
 console-integration-test-latest:			## Run console integration test on the latest Instill Base
 	@make build-latest
-	@COMPOSE_PROFILES=all EDITION=local-ce:test ITMODE_ENABLED=true docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://console:3000 \
-		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://api-gateway:${API_GATEWAY_PORT}  \
+		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://api-gateway:${API_GATEWAY_BASE_PORT}  \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -278,12 +274,11 @@ console-integration-test-latest:			## Run console integration test on the latest
 .PHONY: console-integration-test-release
 console-integration-test-release:			## Run console integration test on the release Instill Base
 	@make build-release
-	@EDITION=local-ce:test ITMODE_ENABLED=true \
-		docker compose up -d --quiet-pull
+	@EDITION=local-ce:test docker compose up -d --quiet-pull
 	@EDITION=local-ce:test docker compose rm -f
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://console:3000 \
-		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://api-gateway:${API_GATEWAY_PORT}  \
+		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://api-gateway:${API_GATEWAY_BASE_PORT}  \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -298,25 +293,24 @@ console-integration-test-release:			## Run console integration test on the relea
 console-helm-integration-test-latest:                       ## Run console integration test on the Helm latest for Instill Base
 ifeq ($(UNAME_S),Darwin)
 	@make build-latest
-	@helm install ${HELM_RELEASE_NAME} charts/base --devel --namespace instill-ai --create-namespace \
-		--set itMode=true \
+	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apigateway.image.tag=latest \
-		--set mgmt.image.tag=latest \
+		--set apiGatewayBase.image.tag=latest \
+		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
-		--set apigatewayURL=http://host.docker.internal:${API_GATEWAY_PORT}
-	@kubectl rollout status deployment base-apigateway -n instill-ai --timeout=120s
-	@export APIGATEWAY_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${APIGATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+		--set apiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_BASE_PORT}
+	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
+	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:3000 \
-		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://host.docker.internal:${API_GATEWAY_BASE_PORT} \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
-		-p ${API_GATEWAY_PORT} :${API_GATEWAY_PORT}  \
+		-p ${API_GATEWAY_BASE_PORT} :${API_GATEWAY_BASE_PORT}  \
 		-p 3000:3000 \
 		--entrypoint ./entrypoint-playwright.sh \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
@@ -328,19 +322,18 @@ ifeq ($(UNAME_S),Darwin)
 endif
 ifeq ($(UNAME_S),Linux)
 	@make build-latest
-	@helm install ${HELM_RELEASE_NAME} charts/base --devel --namespace instill-ai --create-namespace \
-		--set itMode=true \
+	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apigateway.image.tag=latest \
-		--set mgmt.image.tag=latest \
-		--set apigatewayURL=http://localhost:${API_GATEWAY_PORT}
-	@kubectl rollout status deployment base-apigateway -n instill-ai --timeout=120s
-	@export APIGATEWAY_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${APIGATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+		--set apiGatewayBase.image.tag=latest \
+		--set mgmtBackend.image.tag=latest \
+		--set apiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT}
+	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
+	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:3000 \
-		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://localhost:${API_GATEWAY_PORT}  \
+		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://localhost:${API_GATEWAY_BASE_PORT}  \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -359,25 +352,24 @@ endif
 console-helm-integration-test-release:                       ## Run console integration test on the Helm release for Instill Base
 ifeq ($(UNAME_S),Darwin)
 	@make build-release
-	@helm install ${HELM_RELEASE_NAME} charts/base --devel --namespace instill-ai --create-namespace \
-		--set itMode=true \
+	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apigateway.image.tag=${API_GATEWAY_VERSION} \
-		--set mgmt.image.tag=${MGMT_BACKEND_VERSION} \
+		--set apiGatewayBase.image.tag=${API_GATEWAY_BASE_VERSION} \
+		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
-		--set apigatewayURL=http://host.docker.internal:${API_GATEWAY_PORT}
-	@kubectl rollout status deployment base-apigateway -n instill-ai --timeout=120s
-	@export APIGATEWAY_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${APIGATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+		--set apiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_BASE_PORT}
+	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
+	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:3000 \
-		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://host.docker.internal:${API_GATEWAY_PORT}  \
+		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://host.docker.internal:${API_GATEWAY_BASE_PORT}  \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
-		-p ${API_GATEWAY_PORT} :${API_GATEWAY_PORT}  \
+		-p ${API_GATEWAY_BASE_PORT} :${API_GATEWAY_BASE_PORT}  \
 		-p 3000:3000 \
 		--entrypoint ./entrypoint-playwright.sh \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-release \
@@ -389,20 +381,19 @@ ifeq ($(UNAME_S),Darwin)
 endif
 ifeq ($(UNAME_S),Linux)
 	@make build-release
-	@helm install ${HELM_RELEASE_NAME} charts/base --devel --namespace instill-ai --create-namespace \
-		--set itMode=true \
+	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apigateway.image.tag=${API_GATEWAY_VERSION} \
-		--set mgmt.image.tag=${MGMT_BACKEND_VERSION} \
+		--set apiGatewayBase.image.tag=${API_GATEWAY_BASE_VERSION} \
+		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
-		--set apigatewayURL=http://localhost:${API_GATEWAY_PORT}
-	@kubectl rollout status deployment base-apigateway -n instill-ai --timeout=120s
-	@export APIGATEWAY_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${APIGATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+		--set apiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT}
+	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
+	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:3000 \
-		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://localhost:${API_GATEWAY_PORT}  \
+		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://localhost:${API_GATEWAY_BASE_PORT}  \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \

@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "base.apigateway" . }}
+  name: {{ template "base.apiGatewayBase" . }}
   labels:
     {{- include "base.labels" . | nindent 4 }}
-    app.kubernetes.io/component: api-gateway
+    app.kubernetes.io/component: api-gateway-base
   annotations:
     rollme: {{ randAlphaNum 5 | quote }}
 spec:
@@ -13,29 +13,29 @@ spec:
     {{- if eq .Values.updateStrategy.type "Recreate" }}
     rollingUpdate: null
     {{- end }}
-  {{- if not .Values.apigateway.autoscaling.enabled }}
-  replicas: {{ .Values.apigateway.replicaCount }}
+  {{- if not .Values.apiGatewayBase.autoscaling.enabled }}
+  replicas: {{ .Values.apiGatewayBase.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
       {{- include "base.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: api-gateway
+      app.kubernetes.io/component: api-gateway-base
   template:
     metadata:
       labels:
         {{- include "base.matchLabels" . | nindent 8 }}
-        app.kubernetes.io/component: api-gateway
+        app.kubernetes.io/component: api-gateway-base
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/apigateway/configmap.yaml") . | sha256sum }}
-        {{- with .Values.apigateway.podAnnotations }}
+        checksum/config: {{ include (print $.Template.BasePath "/api-gateway-base/configmap.yaml") . | sha256sum }}
+        {{- with .Values.apiGatewayBase.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
-      {{- if .Values.apigateway.serviceAccountName }}
-      serviceAccountName: {{ .Values.apigateway.serviceAccountName }}
+      {{- if .Values.apiGatewayBase.serviceAccountName }}
+      serviceAccountName: {{ .Values.apiGatewayBase.serviceAccountName }}
       {{- end }}
       automountServiceAccountToken: {{ .Values.console.automountServiceAccountToken | default false }}
       terminationGracePeriodSeconds: 120
@@ -55,9 +55,9 @@ spec:
           {{- end }}
           env:
             - name: MGMT_BACKEND_HOST
-              value: "{{ template "base.mgmt" . }}"
+              value: "{{ template "base.mgmtBackend" . }}"
             - name: MGMT_BACKEND_PORT
-              value: "{{ template "base.mgmt.publicPort" . }}"
+              value: "{{ template "base.mgmtBackend.publicPort" . }}"
             - name: INFLUXDB_HOST
               value: "{{ template "base.influxdb" . }}"
             - name: INFLUXDB_PORT
@@ -76,30 +76,30 @@ spec:
             - name: TEMPORAL_CLI_ADDRESS
               value: "{{ template "base.temporal" . }}-frontend:{{ template "base.temporal.frontend.grpcPort" . }}"
         {{- end }}
-        {{- with .Values.apigateway.extraInitContainers }}
+        {{- with .Values.apiGatewayBase.extraInitContainers }}
         {{- toYaml . | indent 8 }}
         {{- end }}
       containers:
-        - name: api-gateway
-          image: {{ .Values.apigateway.image.repository }}:{{ .Values.apigateway.image.tag }}
-          imagePullPolicy: {{ .Values.apigateway.image.pullPolicy }}
+        - name: api-gateway-base
+          image: {{ .Values.apiGatewayBase.image.repository }}:{{ .Values.apiGatewayBase.image.tag }}
+          imagePullPolicy: {{ .Values.apiGatewayBase.image.pullPolicy }}
           readinessProbe:
             httpGet:
               path: /__health
-              scheme: {{ upper (ternary "https" "http" .Values.apigateway.enableTLS) }}
-              port: {{ ternary "https" "http" .Values.apigateway.enableTLS }}
+              scheme: {{ upper (ternary "https" "http" .Values.apiGatewayBase.tls.enabled) }}
+              port: {{ ternary "https" "http" .Values.apiGatewayBase.tls.enabled }}
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /__health
-              scheme: {{ upper (ternary "https" "http" .Values.apigateway.enableTLS) }}
-              port: {{ ternary "https" "http" .Values.apigateway.enableTLS }}
+              scheme: {{ upper (ternary "https" "http" .Values.apiGatewayBase.tls.enabled) }}
+              port: {{ ternary "https" "http" .Values.apiGatewayBase.tls.enabled }}
             initialDelaySeconds: 5
             periodSeconds: 10
-          {{- if .Values.apigateway.resources }}
+          {{- if .Values.apiGatewayBase.resources }}
           resources:
-            {{- toYaml .Values.apigateway.resources | nindent 12 }}
+            {{- toYaml .Values.apiGatewayBase.resources | nindent 12 }}
           {{- end }}
           command: ["/bin/bash", "-c"]
           args:
@@ -111,60 +111,60 @@ spec:
             {{- end }}
               --config krakend.json
           ports:
-            - name: {{ ternary "https" "http" .Values.apigateway.enableTLS }}
-              containerPort: {{ template "base.apigateway.httpPort" . }}
+            - name: {{ ternary "https" "http" .Values.apiGatewayBase.tls.enabled }}
+              containerPort: {{ template "base.apiGatewayBase.httpPort" . }}
               protocol: TCP
             - name: stats
-              containerPort: {{ template "base.apigateway.statsPort" . }}
+              containerPort: {{ template "base.apiGatewayBase.statsPort" . }}
               protocol: TCP
             - name: metrics
-              containerPort: {{ template "base.apigateway.metricsPort" . }}
+              containerPort: {{ template "base.apiGatewayBase.metricsPort" . }}
               protocol: TCP
           volumeMounts:
             - name: config
-              mountPath: {{ .Values.apigateway.configPath }}
+              mountPath: {{ .Values.apiGatewayBase.configPath }}
               subPath: ".env"
-            {{- if .Values.apigateway.enableTLS }}
-            - name: base-apigateway-internal-tls
+            {{- if .Values.apiGatewayBase.tls.enabledd }}
+            - name: {{ template "base.internalTLS.apiGatewayBase.secretName" . }}
               mountPath: "/etc/instill-ai/base/ssl/api-gateway"
               readOnly: true
             {{- end }}
-            {{- with .Values.apigateway.extraVolumeMounts }}
+            {{- with .Values.apiGatewayBase.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.apigateway.extraEnv }}
+          {{- with .Values.apiGatewayBase.extraEnv }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- with .Values.apigateway.sidecarContainers }}
+        {{- with .Values.apiGatewayBase.sidecarContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       volumes:
         - name: config
           configMap:
-            name: {{ template "base.apigateway" . }}
-        {{- if .Values.apigateway.enableTLS }}
-        - name: base-apigateway-internal-tls
+            name: {{ template "base.apiGatewayBase" . }}
+        {{- if .Values.apiGatewayBase.tls.enabled }}
+        - name: {{ template "base.internalTLS.apiGatewayBase.secretName" . }}
           secret:
-            secretName: {{ template "base.internalTLS.apigateway.secretName" . }}
+            secretName: {{ template "base.internalTLS.apiGatewayBase.secretName" . }}
             items:
             - key: tls.crt
               path: tls.crt
             - key: tls.key
               path: tls.key
         {{- end }}
-        {{- with .Values.apigateway.extraVolumes }}
+        {{- with .Values.apiGatewayBase.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- with .Values.apigateway.nodeSelector }}
+      {{- with .Values.apiGatewayBase.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.apigateway.affinity }}
+      {{- with .Values.apiGatewayBase.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.apigateway.tolerations }}
+      {{- with .Values.apiGatewayBase.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

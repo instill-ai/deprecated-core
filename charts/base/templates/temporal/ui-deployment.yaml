@@ -12,8 +12,8 @@ spec:
     {{- if eq .Values.updateStrategy.type "Recreate" }}
     rollingUpdate: null
     {{- end }}
-  {{- if not .Values.apigateway.autoscaling.enabled }}
-  replicas: {{ .Values.apigateway.replicaCount }}
+  {{- if not .Values.apiGatewayBase.autoscaling.enabled }}
+  replicas: {{ .Values.apiGatewayBase.replicaCount }}
   {{- end }}
   selector:
     matchLabels:

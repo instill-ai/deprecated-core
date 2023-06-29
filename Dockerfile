@@ -56,7 +56,7 @@ WORKDIR /instill-ai/base
 ARG CACHE_DATE
 RUN echo "Instill Base release codebase cloned on ${CACHE_DATE}"
 
-ARG API_GATEWAY_VERSION MGMT_BACKEND_VERSION CONSOLE_VERSION
-RUN git clone -b v${API_GATEWAY_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/api-gateway.git
+ARG API_GATEWAY_BASE_VERSION MGMT_BACKEND_VERSION CONSOLE_VERSION
+RUN git clone -b v${API_GATEWAY_BASE_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/api-gateway.git
 RUN git clone -b v${MGMT_BACKEND_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/mgmt-backend.git
 RUN git clone -b v${CONSOLE_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/console.git
