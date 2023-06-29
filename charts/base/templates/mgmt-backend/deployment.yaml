@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "base.mgmt" . }}
+  name: {{ template "base.mgmtBackend" . }}
   labels:
     {{- include "base.labels" . | nindent 4 }}
-    app.kubernetes.io/component: mgmt
+    app.kubernetes.io/component: mgmt-backend
   annotations:
     rollme: {{ randAlphaNum 5 | quote }}
 spec:
@@ -13,21 +13,21 @@ spec:
     {{- if eq .Values.updateStrategy.type "Recreate" }}
     rollingUpdate: null
     {{- end }}
-  {{- if not .Values.mgmt.autoscaling.enabled }}
-  replicas: {{ .Values.mgmt.replicaCount }}
+  {{- if not .Values.mgmtBackend.autoscaling.enabled }}
+  replicas: {{ .Values.mgmtBackend.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
       {{- include "base.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: mgmt
+      app.kubernetes.io/component: mgmt-backend
   template:
     metadata:
       labels:
         {{- include "base.matchLabels" . | nindent 8 }}
-        app.kubernetes.io/component: mgmt
+        app.kubernetes.io/component: mgmt-backend
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/mgmt/configmap.yaml") . | sha256sum }}
-        {{- with .Values.mgmt.podAnnotations }}
+        checksum/config: {{ include (print $.Template.BasePath "/mgmt-backend/configmap.yaml") . | sha256sum }}
+        {{- with .Values.mgmtBackend.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
@@ -35,10 +35,10 @@ spec:
       securityContext:
         runAsUser: 65532
         runAsGroup: 65532
-      {{- if .Values.mgmt.serviceAccountName }}
-      serviceAccountName: {{ .Values.mgmt.serviceAccountName }}
+      {{- if .Values.mgmtBackend.serviceAccountName }}
+      serviceAccountName: {{ .Values.mgmtBackend.serviceAccountName }}
       {{- end }}
-      automountServiceAccountToken: {{ .Values.mgmt.automountServiceAccountToken | default false }}
+      automountServiceAccountToken: {{ .Values.mgmtBackend.automountServiceAccountToken | default false }}
       terminationGracePeriodSeconds: 120
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -57,36 +57,36 @@ spec:
               value: {{ template "base.database.username" . }}
         {{- end }}
         - name: mgmt-backend-migration
-          image: {{ .Values.mgmt.image.repository }}:{{ .Values.mgmt.image.tag }}
-          imagePullPolicy: {{ .Values.mgmt.image.pullPolicy }}
-          {{- if .Values.mgmt.resources }}
+          image: {{ .Values.mgmtBackend.image.repository }}:{{ .Values.mgmtBackend.image.tag }}
+          imagePullPolicy: {{ .Values.mgmtBackend.image.pullPolicy }}
+          {{- if .Values.mgmtBackend.resources }}
           resources:
-            {{- toYaml .Values.mgmt.resources | nindent 12 }}
+            {{- toYaml .Values.mgmtBackend.resources | nindent 12 }}
           {{- end }}
-          command: [./{{ .Values.mgmt.commandName.migration }}]
+          command: [./{{ .Values.mgmtBackend.commandName.migration }}]
           volumeMounts:
             - name: config
-              mountPath: {{ .Values.mgmt.configPath }}
+              mountPath: {{ .Values.mgmtBackend.configPath }}
               subPath: config.yaml
         - name: mgmt-backend-init
-          image: {{ .Values.mgmt.image.repository }}:{{ .Values.mgmt.image.tag }}
-          imagePullPolicy: {{ .Values.mgmt.image.pullPolicy }}
-          {{- if .Values.mgmt.resources }}
+          image: {{ .Values.mgmtBackend.image.repository }}:{{ .Values.mgmtBackend.image.tag }}
+          imagePullPolicy: {{ .Values.mgmtBackend.image.pullPolicy }}
+          {{- if .Values.mgmtBackend.resources }}
           resources:
-            {{- toYaml .Values.mgmt.resources | nindent 12 }}
+            {{- toYaml .Values.mgmtBackend.resources | nindent 12 }}
           {{- end }}
-          command: [./{{ .Values.mgmt.commandName.init }}]
+          command: [./{{ .Values.mgmtBackend.commandName.init }}]
           volumeMounts:
             - name: config
-              mountPath: {{ .Values.mgmt.configPath }}
+              mountPath: {{ .Values.mgmtBackend.configPath }}
               subPath: config.yaml
-        {{- with .Values.mgmt.extraInitContainers }}
+        {{- with .Values.mgmtBackend.extraInitContainers }}
         {{- toYaml . | indent 8 }}
         {{- end }}
       containers:
         - name: mgmt-backend
-          image: {{ .Values.mgmt.image.repository }}:{{ .Values.mgmt.image.tag }}
-          imagePullPolicy: {{ .Values.mgmt.image.pullPolicy }}
+          image: {{ .Values.mgmtBackend.image.repository }}:{{ .Values.mgmtBackend.image.tag }}
+          imagePullPolicy: {{ .Values.mgmtBackend.image.pullPolicy }}
           readinessProbe:
             httpGet:
               path: /v1alpha/__readiness
@@ -101,57 +101,57 @@ spec:
               port: {{ ternary "https" "http" .Values.internalTLS.enabled }}-public
             initialDelaySeconds: 5
             periodSeconds: 10
-          {{- if .Values.mgmt.resources }}
+          {{- if .Values.mgmtBackend.resources }}
           resources:
-            {{- toYaml .Values.mgmt.resources | nindent 12 }}
+            {{- toYaml .Values.mgmtBackend.resources | nindent 12 }}
           {{- end }}
-          command: [./{{ .Values.mgmt.commandName.main }}]
+          command: [./{{ .Values.mgmtBackend.commandName.main }}]
           ports:
             - name: {{ ternary "https" "http" .Values.internalTLS.enabled }}-admin
-              containerPort: {{ template "base.mgmt.privatePort" . }}
+              containerPort: {{ template "base.mgmtBackend.privatePort" . }}
               protocol: TCP
             - name: {{ ternary "https" "http" .Values.internalTLS.enabled }}-public
-              containerPort: {{ template "base.mgmt.publicPort" . }}
+              containerPort: {{ template "base.mgmtBackend.publicPort" . }}
               protocol: TCP
           volumeMounts:
             - name: config
-              mountPath: {{ .Values.mgmt.configPath }}
+              mountPath: {{ .Values.mgmtBackend.configPath }}
               subPath: config.yaml
             {{- if .Values.internalTLS.enabled }}
             - name: mgmt-internal-certs
               mountPath: "/etc/instill-ai/base/ssl/mgmt"
             {{- end }}
-            {{- with .Values.mgmt.extraVolumeMounts }}
+            {{- with .Values.mgmtBackend.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.mgmt.extraEnv }}
+          {{- with .Values.mgmtBackend.extraEnv }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- with .Values.mgmt.sidecarContainers }}
+        {{- with .Values.mgmtBackend.sidecarContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       volumes:
         - name: config
           configMap:
-            name: {{ template "base.mgmt" . }}
+            name: {{ template "base.mgmtBackend" . }}
         {{- if .Values.internalTLS.enabled }}
         - name: mgmt-internal-certs
           secret:
-            secretName: {{ template "base.internalTLS.mgmt.secretName" . }}
+            secretName: {{ template "base.internalTLS.mgmtBackend.secretName" . }}
         {{- end }}
-        {{- with .Values.mgmt.extraVolumes }}
+        {{- with .Values.mgmtBackend.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- with .Values.mgmt.nodeSelector }}
+      {{- with .Values.mgmtBackend.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.mgmt.affinity }}
+      {{- with .Values.mgmtBackend.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.mgmt.tolerations }}
+      {{- with .Values.mgmtBackend.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
