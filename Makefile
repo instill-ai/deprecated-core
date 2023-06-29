@@ -70,7 +70,7 @@ down:			## Stop all services and remove all service containers and volumes
 	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-latest >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-latest >/dev/null 2>&1
-	@docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+	@docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v >/dev/null 2>&1
 
 .PHONY: images
 images:			## List all container images
@@ -161,7 +161,6 @@ integration-test-release:			## Run integration test on the release Instill Base
 
 .PHONY: helm-integration-test-latest
 helm-integration-test-latest:                       ## Run integration test on the Helm latest for Instill Base
-ifeq ($(UNAME_S),Darwin)
 	@make build-latest
 	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
@@ -174,39 +173,22 @@ ifeq ($(UNAME_S),Darwin)
 	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+ifeq ($(UNAME_S),Darwin)
 	@docker run -it --rm -p ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=host.docker.internal API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
-	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
-	@kubectl delete namespace instill-ai
-	@pkill -f "port-forward"
-	@make down
-endif
-ifeq ($(UNAME_S),Linux)
-	@make build-latest
-	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
-		--set edition=k8s-ce:test \
-		--set apiGatewayBase.image.tag=latest \
-		--set mgmtBackend.image.tag=latest \
-		--set console.image.tag=latest \
-		--set tags.observability=false \
-		--set apiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT}
-	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
-	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
+endif
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
 	@kubectl delete namespace instill-ai
 	@pkill -f "port-forward"
 	@make down
-endif
 
 .PHONY: helm-integration-test-release
 helm-integration-test-release:                       ## Run integration test on the Helm release for Instill Base
-ifeq ($(UNAME_S),Darwin)
 	@make build-release
 	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
 		--set edition=k8s-ce:test \
@@ -219,35 +201,19 @@ ifeq ($(UNAME_S),Darwin)
 	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+ifeq ($(UNAME_S),Darwin)
 	@docker run -it --rm -p ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
 			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=host.docker.internal API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
-	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
-	@kubectl delete namespace instill-ai
-	@pkill -f "port-forward"
-	@make down
-endif
-ifeq ($(UNAME_S),Linux)
-	@make build-release
-	@helm install ${HELM_RELEASE_NAME} charts/base --namespace instill-ai --create-namespace \
-		--set edition=k8s-ce:test \
-		--set apiGatewayBase.image.tag=${API_GATEWAY_BASE_VERSION} \
-		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
-		--set console.image.tag=${CONSOLE_VERSION} \
-		--set tags.observability=false \
-		--set apiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT}
-	@kubectl rollout status deployment base-api-gateway-base -n instill-ai --timeout=120s
-	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace instill-ai port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
 			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
+endif
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
 	@kubectl delete namespace instill-ai
 	@pkill -f "port-forward"
 	@make down
-endif
 
 # ==================================================================
 # ==================== Console Integration Test ====================
