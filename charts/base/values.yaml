@@ -213,7 +213,7 @@ apiGatewayBase:
     tag: 0.2.8-alpha
     pullPolicy: IfNotPresent
   # -- The path of configuration file for api-gateway-base
-  configPath: /api-gateway/config/.env
+  configPath: /api-gateway-base/config/.env
   # -- The TLS configuration for api-gateway-base
   tls:
     enabled: false
