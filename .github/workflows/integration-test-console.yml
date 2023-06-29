@@ -54,8 +54,8 @@ jobs:
           cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:latest .
           docker run -t --rm \
             -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://${CONSOLE_HOST}:${CONSOLE_PORT} \
-            -e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-            -e NEXT_SERVER_API_GATEWAY_BASE_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+            -e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT} \
+            -e NEXT_SERVER_API_GATEWAY_BASE_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT} \
             -e NEXT_PUBLIC_API_VERSION=v1alpha \
             -e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
             -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -80,8 +80,8 @@ jobs:
           cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:${{ env.CONSOLE_VERSION }} .
           docker run -t --rm \
             -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://${CONSOLE_HOST}:${CONSOLE_PORT} \
-            -e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-            -e NEXT_SERVER_API_GATEWAY_BASE_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+            -e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT} \
+            -e NEXT_SERVER_API_GATEWAY_BASE_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT} \
             -e NEXT_PUBLIC_API_VERSION=v1alpha \
             -e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
             -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \

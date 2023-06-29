@@ -93,9 +93,9 @@ spec:
             - name: NEXT_PUBLIC_CONSOLE_BASE_URL
               value: "{{ .Values.consoleURL }}"
             - name: NEXT_PUBLIC_API_GATEWAY_BASE_URL
-              value: "{{ .Values.apigatewayURL }}"
+              value: "{{ .Values.apiGatewayBaseURL }}"
             - name: NEXT_SERVER_API_GATEWAY_BASE_URL
-              value: {{ default (printf "http://%s:%s" (include "base.apigateway" .) (include "base.apigateway.httpPort" . )) .Values.console.serverApiGatewayBaseUrl }}
+              value: {{ default (printf "http://%s:%s" (include "base.apiGatewayBase" .) (include "base.apiGatewayBase.httpPort" . )) .Values.console.serverApiGatewayBaseUrl }}
             - name: NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME
               value: "instill-ai-user"
             - name: NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION

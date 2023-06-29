@@ -113,12 +113,6 @@ app.kubernetes.io/name: {{ include "base.name" . }}
   {{- include "base.database.rawPassword" . | b64enc | quote -}}
 {{- end -}}
 
-{{- define "base.redis.scheme" -}}
-  {{- with .Values.redis -}}
-    {{- ternary "redis+sentinel" "redis"  (and (eq .type "external" ) .external.sentinelMasterSet) -}}
-  {{- end -}}
-{{- end -}}
-
 /*host:port*/
 {{- define "base.redis.addr" -}}
   {{- with .Values.redis -}}
@@ -126,37 +120,12 @@ app.kubernetes.io/name: {{ include "base.name" . }}
   {{- end -}}
 {{- end -}}
 
-{{- define "base.redis.masterSet" -}}
-  {{- with .Values.redis -}}
-    {{- ternary .external.sentinelMasterSet "" (eq "redis+sentinel" (include "base.redis.scheme" $)) -}}
-  {{- end -}}
+{{- define "base.apiGatewayBase" -}}
+  {{- printf "%s-api-gateway-base" (include "base.fullname" .) -}}
 {{- end -}}
 
-{{- define "base.redis.password" -}}
-  {{- with .Values.redis -}}
-    {{- ternary "" .external.password .enabled -}}
-  {{- end -}}
-{{- end -}}
-
-/*scheme://[:password@]host:port[/master_set]*/
-{{- define "base.redis.url" -}}
-  {{- with .Values.redis -}}
-    {{- $path := ternary "" (printf "/%s" (include "base.redis.masterSet" $)) (not (include "base.redis.masterSet" $)) -}}
-    {{- $cred := ternary (printf ":%s@" (.external.password | urlquery)) "" (and (eq .type "external" ) (not (not .external.password))) -}}
-    {{- printf "%s://%s%s%s" (include "base.redis.scheme" $) $cred (include "base.redis.addr" $) $path -}}
-  {{- end -}}
-{{- end -}}
-
-{{- define "base.apigateway" -}}
-  {{- printf "%s-apigateway" (include "base.fullname" .) -}}
-{{- end -}}
-
-{{- define "base.mgmt" -}}
+{{- define "base.mgmtBackend" -}}
   {{- printf "%s-mgmt-backend" (include "base.fullname" .) -}}
-{{- end -}}
-
-{{- define "base.mgmt.migration" -}}
-  {{- printf "%s-mgmt-backend-migration" (include "base.mgmt" .) -}}
 {{- end -}}
 
 {{- define "base.console" -}}
@@ -187,28 +156,28 @@ app.kubernetes.io/name: {{ include "base.name" . }}
   {{- printf "%s-temporal-ui" (include "base.fullname" .) -}}
 {{- end -}}
 
-{{/* api-gateway service and container port */}}
-{{- define "base.apigateway.httpPort" -}}
-  {{- printf "8080" -}}
+{{/* api-gateway-base service and container port */}}
+{{- define "base.apiGatewayBase.httpPort" -}}
+  {{- printf "7080" -}}
 {{- end -}}
 
-{{/* api-gateway service and container stats port */}}
-{{- define "base.apigateway.statsPort" -}}
-  {{- printf "8090" -}}
+{{/* api-gateway-base service and container stats port */}}
+{{- define "base.apiGatewayBase.statsPort" -}}
+  {{- printf "7070" -}}
 {{- end -}}
 
-{{/* api-gateway service and container metrics port */}}
-{{- define "base.apigateway.metricsPort" -}}
-  {{- printf "9000" -}}
+{{/* api-gateway-base service and container metrics port */}}
+{{- define "base.apiGatewayBase.metricsPort" -}}
+  {{- printf "7071" -}}
 {{- end -}}
 
-{{/* mgmt service and container public port */}}
-{{- define "base.mgmt.publicPort" -}}
+{{/* mgmt-backend service and container public port */}}
+{{- define "base.mgmtBackend.publicPort" -}}
   {{- printf "8084" -}}
 {{- end -}}
 
-{{/* mgmt service and container private port */}}
-{{- define "base.mgmt.privatePort" -}}
+{{/* mgmt-backend service and container private port */}}
+{{- define "base.mgmtBackend.privatePort" -}}
   {{- printf "3084" -}}
 {{- end -}}
 
@@ -295,25 +264,17 @@ app.kubernetes.io/name: {{ include "base.name" . }}
   {{- printf "8095" -}}
 {{- end -}}
 
-{{- define "base.internalTLS.apigateway.secretName" -}}
+{{- define "base.internalTLS.apiGatewayBase.secretName" -}}
   {{- if eq .Values.internalTLS.certSource "secret" -}}
-    {{- .Values.internalTLS.apigateway.secretName -}}
+    {{- .Values.internalTLS.apiGatewayBase.secretName -}}
   {{- else -}}
-    {{- printf "%s-apigateway-internal-tls" (include "base.fullname" .) -}}
+    {{- printf "%s-api-gateway-base-internal-tls" (include "base.fullname" .) -}}
   {{- end -}}
 {{- end -}}
 
-{{- define "base.internalTLS.controller.secretName" -}}
+{{- define "base.internalTLS.mgmtBackend.secretName" -}}
   {{- if eq .Values.internalTLS.certSource "secret" -}}
-    {{- .Values.internalTLS.controller.secretName -}}
-  {{- else -}}
-    {{- printf "%s-controller-internal-tls" (include "base.fullname" .) -}}
-  {{- end -}}
-{{- end -}}
-
-{{- define "base.internalTLS.mgmt.secretName" -}}
-  {{- if eq .Values.internalTLS.certSource "secret" -}}
-    {{- .Values.internalTLS.mgmt.secretName -}}
+    {{- .Values.internalTLS.mgmtBackend.secretName -}}
   {{- else -}}
     {{- printf "%s-mgmt-internal-tls" (include "base.fullname" .) -}}
   {{- end -}}

@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "base.mgmt" . }}
+  name: {{ template "base.mgmtBackend" . }}
   labels:
     {{- include "base.labels" . | nindent 4 }}
-    app.kubernetes.io/component: mgmt
+    app.kubernetes.io/component: mgmt-backend
 data:
   config.yaml: |+
     server:
-      privateport: {{ template "base.mgmt.privatePort" . }}
-      publicport: {{ template "base.mgmt.publicPort" . }}
+      privateport: {{ template "base.mgmtBackend.privatePort" . }}
+      publicport: {{ template "base.mgmtBackend.publicPort" . }}
       edition: {{ .Values.edition }}
       usage:
         {{- toYaml .Values.usage | nindent 8 }}
@@ -25,7 +25,7 @@ data:
       host: {{ default (include "base.database.host" .) .Values.database.external.host }}
       port: {{ default (include "base.database.port" .) .Values.database.external.port }}
       name: mgmt
-      version: {{ .Values.mgmt.dbVersion }}
+      version: {{ .Values.mgmtBackend.dbVersion }}
       timezone: Etc/UTC
       pool:
         idleconnections: {{ .Values.database.maxIdleConns }}

@@ -1,18 +1,24 @@
 ## -- Provide a name in place of base
 nameOverride: ""
+
 ## -- Override the deployment namespace
 namespaceOverride: ""
+
 ## -- Provide a name to substitute for the full names of resources
 fullnameOverride: ""
+
 # -- The update strategy for deployments with persistent volumes: "RollingUpdate" or "Recreate"
 # Set it as "Recreate" when "RWM" for volumes isn't supported
 updateStrategy:
   type: RollingUpdate
+
 # -- Logging level: debug, info, warning, error or fatal
 logLevel: info
+
 # -- Enable development mode
 # if edition is "k8s-ce:dev", console will be launched with CODE_ENV=development. Otherwise, CODE_ENV=production
 edition: k8s-ce
+
 # -- Use this set to assign a list of default pullSecrets
 imagePullSecrets:
 expose:
@@ -54,11 +60,11 @@ expose:
   clusterIP:
     ports:
       # The service port api-gateway http listens on
-      apigatewayHttp:
+      apiGatewayBaseHttp:
       # The service port api-gateway stats listens on
-      apigatewayStats:
+      apiGatewayBaseStats:
       # The service port api-gateway metrics listens on
-      apigatewayMetrics:
+      apiGatewayBaseMetrics:
       # The service port console web listens on
       console:
       # The service port temporal web listens on
@@ -67,17 +73,17 @@ expose:
     annotations: {}
   nodePort:
     ports:
-      apigatewayHttp:
+      apiGatewayBaseHttp:
         # The service port api-gateway http listens on
         port:
         # The node port api-gateway listens on
         nodePort: 30010
-      apigatewayStats:
+      apiGatewayBaseStats:
         # The service port api-gateway stats listens
         port:
         # The node port api-gateway stats listens on
         nodePort: 30011
-      apigatewayMetrics:
+      apiGatewayBaseMetrics:
         # The service port api-gateway metrics listens on
         port:
         # The node port api-gateway metrics listens on
@@ -100,17 +106,18 @@ expose:
     sourceRanges: []
     ports:
       # The service port api-gateway http listens on
-      apigatewayHttp:
+      apiGatewayBaseHttp:
       # The service port api-gateway stats listens on
-      apigatewayStats:
+      apiGatewayBaseStats:
       # The service port api-gateway metrics listens on
-      apigatewayMetrics:
+      apiGatewayBaseMetrics:
       # The service port console web listens on
       console:
       # The service port temporal web listens on
       temporal:
     # Annotations on the LoadBalancer service
     annotations: {}
+
 # -- The external URL for Instill Base services. It is used to
 # populate the API endpoints showed on the console
 #
@@ -123,8 +130,9 @@ expose:
 # the IP address of Kubernetes node
 #
 # If Instill Base is deployed behind the proxy, set it as the URL of the proxy (without protocol and port)
-apigatewayURL: http://localhost:8080
+apiGatewayBaseURL: http://localhost:7080
 consoleURL: http://localhost:3000
+
 # -- The internal TLS used for Instill Base services secure communicating. In order to enable https
 # in each components tls cert files need to provided in advance.
 internalTLS:
@@ -137,16 +145,16 @@ internalTLS:
   certSource: "auto"
   # The content of trust ca, only available when `certSource` is "manual"
   trustCa: ""
-  # api-gateway related cert configuration
-  apigateway:
-    # secret name for api-gateway's tls certs, only available when `certSource` is "secret"
+  # api-gateway-base related cert configuration
+  apiGatewayBase:
+    # secret name for api-gateway-base's tls certs, only available when `certSource` is "secret"
     secretName: ""
-    # Content of api-gateway's TLS cert file, only available when `certSource` is "manual"
+    # Content of api-gateway-base's TLS cert file, only available when `certSource` is "manual"
     crt: ""
-    # Content of api-gateway's TLS key file, only available when `certSource` is "manual"
+    # Content of api-gateway-base's TLS key file, only available when `certSource` is "manual"
     key: ""
   # mgmt-backend related cert configuration
-  mgmt:
+  mgmtBackend:
     # secret name for mgmt-backend's tls certs, only available when `certSource` is "secret"
     secretName: ""
     # Content of mgmt-backend's TLS key file, only available when `certSource` is "manual"
@@ -161,6 +169,7 @@ internalTLS:
     crt: ""
     # Content of console's TLS key file, only available when `certSource` is "manual"
     key: ""
+
 # -- The persistence is enabled by default and a default StorageClass
 # is needed in the k8s cluster to provision volumes dynamically.
 # Specify another StorageClass in the "storageClass" or set "existingClaim"
@@ -189,22 +198,25 @@ persistence:
       accessMode: ReadWriteOnce
       size: 128Mi
       annotations: {}
+
 # -- The usage collector configuration
 usage:
   enabled: true
   tlsenabled: true
   host: usage.instill.tech
   port: 443
-apigateway:
-  # -- The image of api-gateway
+
+apiGatewayBase:
+  # -- The image of api-gateway-base
   image:
     repository: instill/api-gateway
-    tag: 0.2.7-alpha
+    tag: 0.2.8-alpha
     pullPolicy: IfNotPresent
-  # -- The path of configuration file for api-gateway
-  configPath: /api-gateway-base/config/.env
-  # -- Enable TLS for api-gateway or not
-  enableTLS: false
+  # -- The path of configuration file for api-gateway-base
+  configPath: /api-gateway/config/.env
+  # -- The TLS configuration for api-gateway-base
+  tls:
+    enabled: false
   # -- Set the service account to be used, default if left empty
   serviceAccountName: ""
   # -- Mount the service account token
@@ -250,7 +262,8 @@ apigateway:
     spec:
       minAvailable:
       maxUnavailable:
-mgmt:
+
+mgmtBackend:
   # -- The image of mgmt-backend
   image:
     repository: instill/mgmt-backend
@@ -311,6 +324,7 @@ mgmt:
     spec:
       minAvailable:
       maxUnavailable:
+
 console:
   # -- Enable console deployment or not
   enabled: true
@@ -366,6 +380,7 @@ console:
     spec:
       minAvailable:
       maxUnavailable:
+
 database:
   # -- If external database is used, set "enabled" to false
   # and fill the connection informations in "external" section
@@ -414,6 +429,7 @@ database:
     port:
     username:
     password:
+
 etcd:
   persistence:
     enabled: false
@@ -422,6 +438,7 @@ etcd:
       create: false
   autoCompactionMode: revision
   autoCompactionRetention: 1
+
 redis:
   # -- If external Redis is used, set "enabled" to false
   # and fill the connection informations in "external" section
@@ -450,6 +467,7 @@ redis:
   external:
     # -- Address for redis: <host_redis>:<port_redis>
     addr:
+
 temporal:
   # -- Enable Temporal deployment or not
   enabled: true
@@ -740,6 +758,7 @@ temporal:
       routing:
         default_to_namespace: default
         issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
+
 elasticsearch:
   # -- If external Elasticsearch is used, set "enabled" to false
   # and fill the connection informations in "external" section
@@ -761,6 +780,7 @@ elasticsearch:
       xpack.security.enabled: false
   ## -- The configuration of external Elasticsearch
   external:
+
 influxdb2:
   enabled: true
   service:
@@ -780,6 +800,7 @@ influxdb2:
         BUCKET_ID=$(influx bucket list | grep "$DOCKER_INFLUXDB_INIT_BUCKET" | awk '{print $1}')
         influx v1 dbrp create --db ${DOCKER_INFLUXDB_INIT_BUCKET} --rp ${DOCKER_INFLUXDB_INIT_RETENTION} --bucket-id ${BUCKET_ID} --default
         influx v1 auth create --username ${DOCKER_INFLUXDB_INIT_USERNAME} --password ${DOCKER_INFLUXDB_INIT_PASSWORD} --write-bucket ${BUCKET_ID} --org ${DOCKER_INFLUXDB_INIT_ORG}
+
 jaeger:
   provisionDataStore:
     cassandra: false
@@ -876,6 +897,7 @@ opentelemetry-collector:
             - batch
           exporters:
             - logging
+
 prometheus:
   prometheus-node-exporter:
     enabled: false
@@ -887,7 +909,8 @@ prometheus:
       static_configs:
         - targets:
             - "http://base-opentelemetry-collector:9001"
-            - "http://base-apigateway:9000"
+            - "http://base-api-gateway-base:9000"
+
 grafana:
   adminPassword: password
   dashboards:
@@ -906,6 +929,7 @@ grafana:
           updateIntervalSeconds: 60
           options:
             path: /var/lib/grafana/dashboards/default
+
   datasources:
     datasources.yaml:
       apiVersion: 1
@@ -927,5 +951,6 @@ grafana:
             version: Flux
           secureJsonData:
             token: i-love-instill-ai
+
 tags:
   observability: true
