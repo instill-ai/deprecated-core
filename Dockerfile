@@ -36,10 +36,15 @@ COPY --from=base /etc /etc
 COPY --from=base /usr /usr
 COPY --from=docker:dind /usr/local/bin /usr/local/bin
 
-WORKDIR /instill-ai/base
-
 ARG CACHE_DATE
 RUN echo "Instill Base latest codebase cloned on ${CACHE_DATE}"
+
+WORKDIR /instill-ai
+
+RUN git clone https://github.com/instill-ai/vdp.git
+RUN git clone https://github.com/instill-ai/model.git
+
+WORKDIR /instill-ai/base
 
 RUN git clone https://github.com/instill-ai/api-gateway.git
 RUN git clone https://github.com/instill-ai/mgmt-backend.git
@@ -51,10 +56,16 @@ COPY --from=base /etc /etc
 COPY --from=base /usr /usr
 COPY --from=docker:dind /usr/local/bin /usr/local/bin
 
-WORKDIR /instill-ai/base
-
 ARG CACHE_DATE
 RUN echo "Instill Base release codebase cloned on ${CACHE_DATE}"
+
+WORKDIR /instill-ai
+
+ARG VDP_VERSION MODEL_VERSION
+RUN git clone -b v${VDP_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/vdp.git
+RUN git clone -b v${MODEL_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/model.git
+
+WORKDIR /instill-ai/base
 
 ARG API_GATEWAY_BASE_VERSION MGMT_BACKEND_VERSION CONSOLE_VERSION
 RUN git clone -b v${API_GATEWAY_BASE_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/api-gateway.git

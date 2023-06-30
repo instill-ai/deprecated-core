@@ -40,8 +40,7 @@ jobs:
         run: |
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
-          CONSOLE_BASE_URL_HOST=console \
-          CONSOLE_BASE_API_GATEWAY_URL_HOST=api-gateway \
+          CONSOLE_URL_HOST=console \
           docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
@@ -67,8 +66,7 @@ jobs:
         if: inputs.target == 'release'
         run: |
           EDITION=local-ce:test \
-          CONSOLE_BASE_URL_HOST=console \
-          CONSOLE_BASE_API_GATEWAY_URL_HOST=api-gateway \
+          CONSOLE_URL_HOST=console \
           docker compose up -d --quiet-pull
           EDITION=local-ce:test \
           docker compose rm -f

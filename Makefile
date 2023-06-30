@@ -14,8 +14,9 @@ endif
 UNAME_S := $(shell uname -s)
 
 CONTAINER_BUILD_NAME := base-build
+CONTAINER_COMPOSE_NAME := base-dind
 CONTAINER_COMPOSE_IMAGE_NAME := instill/base-compose
-CONTAINER_PLAYWRIGHT_IMAGE_NAME := instill/base-console-playwright
+CONTAINER_PLAYWRIGHT_IMAGE_NAME := instill/console-playwright
 CONTAINER_BACKEND_INTEGRATION_TEST_NAME := base-backend-integration-test
 CONTAINER_CONSOLE_INTEGRATION_TEST_NAME := base-console-integration-test
 
@@ -69,8 +70,28 @@ down:			## Stop all services and remove all service containers and volumes
 	@docker rm -f ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-latest >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release >/dev/null 2>&1
-	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-latest >/dev/null 2>&1
+	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-release >/dev/null 2>&1
 	@docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v >/dev/null 2>&1
+	@if docker compose ls -q | grep -q "instill-model"; then \
+		docker run -it --rm \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			--name ${CONTAINER_COMPOSE_NAME} \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+				/bin/bash -c 'cd /instill-ai/model && make down >/dev/null 2>&1' \
+			"; \
+	fi
+	@docker rm -f ${CONTAINER_COMPOSE_NAME}-latest >/dev/null 2>&1
+	@docker rm -f ${CONTAINER_COMPOSE_NAME}-release >/dev/null 2>&1
+	@if docker compose ls -q | grep -q "instill-vdp"; then \
+		docker run -it --rm \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			--name ${CONTAINER_COMPOSE_NAME} \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+				/bin/bash -c 'cd /instill-ai/vdp && make down >/dev/null 2>&1' \
+			"; \
+	fi
+	@docker rm -f ${CONTAINER_COMPOSE_NAME}-latest >/dev/null 2>&1
+	@docker rm -f ${CONTAINER_COMPOSE_NAME}-release >/dev/null 2>&1
 
 .PHONY: images
 images:			## List all container images
@@ -224,13 +245,38 @@ console-integration-test-latest:			## Run console integration test on the latest
 	@make build-latest
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+		--name ${CONTAINER_COMPOSE_NAME}-latest \
+		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+			cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
+			cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+			/bin/bash -c 'cd /instill-ai/vdp && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
+			/bin/bash -c 'cd /instill-ai/vdp && make latest PROFILE=all EDITION=local-ce:test BASE_ENABLED=false' \
+		" && rm -r $${TMP_CONFIG_DIR}
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+		--name ${CONTAINER_COMPOSE_NAME}-latest \
+		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+			cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
+			cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+			/bin/bash -c 'cd /instill-ai/model && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
+			/bin/bash -c 'cd /instill-ai/model && make latest PROFILE=all EDITION=local-ce:test BASE_ENABLED=false' \
+		" && rm -r $${TMP_CONFIG_DIR}
 	@docker run -it --rm \
-		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://console:3000 \
-		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://api-gateway:${API_GATEWAY_BASE_PORT}  \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
+		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
+		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://console:3000 \
+		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT}  \
+		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT}  \
+		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://${API_GATEWAY_VDP_HOST}:${API_GATEWAY_VDP_PORT}  \
+		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://${API_GATEWAY_VDP_HOST}:${API_GATEWAY_VDP_PORT}  \
+		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_MODEL_HOST}:${API_GATEWAY_MODEL_PORT}  \
+		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_MODEL_HOST}:${API_GATEWAY_MODEL_PORT}  \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
-		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
 		--network instill-network \
 		--entrypoint ./entrypoint-playwright.sh \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
@@ -243,12 +289,29 @@ console-integration-test-release:			## Run console integration test on the relea
 	@EDITION=local-ce:test docker compose up -d --quiet-pull
 	@EDITION=local-ce:test docker compose rm -f
 	@docker run -it --rm \
-		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://console:3000 \
-		-e NEXT_PUBLIC_API_GATEWAY_BASE_URL=http://api-gateway:${API_GATEWAY_BASE_PORT}  \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		--name ${CONTAINER_COMPOSE_NAME}-latest \
+		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+			/bin/bash -c 'cd /instill-ai/vdp && make all EDITION=local-ce:test BASE_ENABLED=false' \
+		"
+	@docker run -it --rm \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		--name ${CONTAINER_COMPOSE_NAME}-latest \
+		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+			/bin/bash -c 'cd /instill-ai/model && make latest PROFILE=all EDITION=local-ce:test BASE_ENABLED=false' \
+		"
+	@docker run -it --rm \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
+		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
+		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://console:3000 \
+		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT}  \
+		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT}  \
+		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://${API_GATEWAY_VDP_HOST}:${API_GATEWAY_VDP_PORT}  \
+		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://${API_GATEWAY_VDP_HOST}:${API_GATEWAY_VDP_PORT}  \
+		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_MODEL_HOST}:${API_GATEWAY_MODEL_PORT}  \
+		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_MODEL_HOST}:${API_GATEWAY_MODEL_PORT}  \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
-		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
 		--network instill-network \
 		--entrypoint ./entrypoint-playwright.sh \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-release \
