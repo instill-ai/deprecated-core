@@ -71,27 +71,25 @@ down:			## Stop all services and remove all service containers and volumes
 	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-latest >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-release >/dev/null 2>&1
-	@docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v >/dev/null 2>&1
+	@docker rm -f ${CONTAINER_COMPOSE_NAME}-latest >/dev/null 2>&1
+	@docker rm -f ${CONTAINER_COMPOSE_NAME}-release >/dev/null 2>&1
+	@docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
 	@if docker compose ls -q | grep -q "instill-model"; then \
 		docker run -it --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			--name ${CONTAINER_COMPOSE_NAME} \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-				/bin/bash -c 'cd /instill-ai/model && make down >/dev/null 2>&1' \
+				/bin/bash -c 'cd /instill-ai/model && make down' \
 			"; \
 	fi
-	@docker rm -f ${CONTAINER_COMPOSE_NAME}-latest >/dev/null 2>&1
-	@docker rm -f ${CONTAINER_COMPOSE_NAME}-release >/dev/null 2>&1
 	@if docker compose ls -q | grep -q "instill-vdp"; then \
 		docker run -it --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			--name ${CONTAINER_COMPOSE_NAME} \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-				/bin/bash -c 'cd /instill-ai/vdp && make down >/dev/null 2>&1' \
+				/bin/bash -c 'cd /instill-ai/vdp && make down' \
 			"; \
 	fi
-	@docker rm -f ${CONTAINER_COMPOSE_NAME}-latest >/dev/null 2>&1
-	@docker rm -f ${CONTAINER_COMPOSE_NAME}-release >/dev/null 2>&1
 
 .PHONY: images
 images:			## List all container images
@@ -242,6 +240,7 @@ endif
 
 .PHONY: console-integration-test-latest
 console-integration-test-latest:			## Run console integration test on the latest Instill Base
+	@make build-latest
 	@COMPOSE_PROFILES=all CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway-base CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway-vdp CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway-model EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
