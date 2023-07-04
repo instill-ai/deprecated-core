@@ -38,9 +38,9 @@ spec:
   {{- if $tls.enabled }}
   tls:
   - secretName: {{ $tls.secret.secretName }}
-    {{- if $ingress.hosts.apigateway }}
+    {{- if $ingress.hosts.apiGatewayBase }}
     hosts:
-    - {{ $ingress.hosts.apigateway }}
+    - {{ $ingress.hosts.apiGatewayBase }}
     {{- end }}
   {{- end }}
   rules:
@@ -60,7 +60,7 @@ spec:
             port:
               number: {{ template "base.apiGatewayBase.httpPort" . }}
 {{- end }}
-    {{- if $ingress.hosts.apigateway }}
-    host: {{ $ingress.hosts.apigateway }}
+    {{- if $ingress.hosts.apiGatewayBase }}
+    host: {{ $ingress.hosts.apiGatewayBase }}
     {{- end }}
 {{- end }}

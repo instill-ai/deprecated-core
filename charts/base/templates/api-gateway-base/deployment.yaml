@@ -124,7 +124,7 @@ spec:
             - name: config
               mountPath: {{ .Values.apiGatewayBase.configPath }}
               subPath: ".env"
-            {{- if .Values.apiGatewayBase.tls.enabledd }}
+            {{- if .Values.apiGatewayBase.tls.enabled }}
             - name: {{ template "base.internalTLS.apiGatewayBase.secretName" . }}
               mountPath: "/etc/instill-ai/base/ssl/api-gateway"
               readOnly: true
