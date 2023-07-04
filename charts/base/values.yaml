@@ -792,6 +792,9 @@ influxdb2:
     user: "admin"
     password: "password"
     token: "i-love-instill-ai"
+  env:
+    - name: DOCKER_INFLUXDB_BUCKET_VDP
+      value: vdp
   initScripts:
     enabled: true
     scripts:
