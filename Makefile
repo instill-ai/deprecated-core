@@ -242,8 +242,7 @@ endif
 
 .PHONY: console-integration-test-latest
 console-integration-test-latest:			## Run console integration test on the latest Instill Base
-	@make build-latest
-	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+	@COMPOSE_PROFILES=all CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway-base CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway-vdp CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway-model EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -263,7 +262,7 @@ console-integration-test-latest:			## Run console integration test on the latest
 			cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
 			cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/bash -c 'cd /instill-ai/model && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
-			/bin/bash -c 'cd /instill-ai/model && make latest PROFILE=all EDITION=local-ce:test BASE_ENABLED=false' \
+			/bin/bash -c 'cd /instill-ai/model && make latest PROFILE=all ITMODE_ENABLED=true EDITION=local-ce:test BASE_ENABLED=false' \
 		" && rm -r $${TMP_CONFIG_DIR}
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
@@ -286,7 +285,7 @@ console-integration-test-latest:			## Run console integration test on the latest
 .PHONY: console-integration-test-release
 console-integration-test-release:			## Run console integration test on the release Instill Base
 	@make build-release
-	@EDITION=local-ce:test docker compose up -d --quiet-pull
+	@EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway-base CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway-vdp CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway-model docker compose up -d --quiet-pull
 	@EDITION=local-ce:test docker compose rm -f
 	@docker run -it --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -298,7 +297,7 @@ console-integration-test-release:			## Run console integration test on the relea
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		--name ${CONTAINER_COMPOSE_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd /instill-ai/model && make latest PROFILE=all EDITION=local-ce:test BASE_ENABLED=false' \
+			/bin/bash -c 'cd /instill-ai/model && make all PROFILE=all EDITION=local-ce:test ITMODE_ENABLED=true BASE_ENABLED=false' \
 		"
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
