@@ -202,3 +202,20 @@ services:
       ETCDCTL_API: ${ETCDCTL_API}
       ETCD_AUTO_COMPACTION_MODE: ${ETCD_AUTO_COMPACTION_MODE}
       ETCD_AUTO_COMPACTION_RETENTION: ${ETCD_AUTO_COMPACTION_RETENTION}
+
+  influxdb:
+    container_name: ${INFLUXDB_HOST}
+    image: ${INFLUXDB_IMAGE}:${INFLUXDB_VERSION}-alpine
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: password
+      DOCKER_INFLUXDB_INIT_ORG: instill-ai
+      DOCKER_INFLUXDB_INIT_BUCKET: krakend
+      DOCKER_INFLUXDB_INIT_RETENTION: 1w
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: i-love-instill-ai
+      DOCKER_INFLUXDB_BUCKET_VDP: vdp
+    volumes:
+      - ${OBSERVE_CONFIG_DIR_PATH}/influxdb:/docker-entrypoint-initdb.d
+    ports:
+      - ${INFLUXDB_PORT}:8086

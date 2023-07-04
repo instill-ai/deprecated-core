@@ -10,3 +10,9 @@ influx v1 auth create \
   --password ${DOCKER_INFLUXDB_INIT_PASSWORD} \
   --write-bucket ${BUCKET_ID} \
   --org ${DOCKER_INFLUXDB_INIT_ORG}
+
+influx bucket create \
+  --name ${DOCKER_INFLUXDB_BUCKET_VDP} \
+  --org ${DOCKER_INFLUXDB_INIT_ORG} \
+  --token ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN} \
+  --retention ${DOCKER_INFLUXDB_INIT_RETENTION}
