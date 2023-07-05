@@ -161,7 +161,7 @@ integration-test-latest:			## Run integration test on the latest Instill Base
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=${API_GATEWAY_BASE_HOST} API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=${API_GATEWAY_BASE_HOST} API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 	@make down
 
@@ -174,7 +174,7 @@ integration-test-release:			## Run integration test on the release Instill Base
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-release \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=${API_GATEWAY_BASE_HOST} API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=${API_GATEWAY_BASE_HOST} API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 	@make down
 
@@ -194,11 +194,11 @@ helm-integration-test-latest:                       ## Run integration test on t
 	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 ifeq ($(UNAME_S),Darwin)
 	@docker run -it --rm -p ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=host.docker.internal API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=host.docker.internal API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 endif
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
@@ -222,11 +222,11 @@ helm-integration-test-release:                       ## Run integration test on 
 	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 ifeq ($(UNAME_S),Darwin)
 	@docker run -it --rm -p ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=host.docker.internal API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=host.docker.internal API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_HOST=localhost API_GATEWAY_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
 		"
 endif
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace instill-ai
