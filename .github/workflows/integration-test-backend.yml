@@ -1,6 +1,10 @@
 name: Integration Test Reusable (backend)
 
 on:
+  workflow_dispatch:
+  push:
+    branches:
+      - ins-1105-fix-the-the-integration-test-cicd-in-all-projects  
   workflow_call:
     inputs:
       component:
@@ -55,9 +59,10 @@ jobs:
       - name: Run ${{ inputs.component }} integration test (latest)
         if: inputs.target == 'latest'
         run: |
-          git clone -b https://github.com/instill-ai/${{ inputs.component }}.git
+          git clone https://github.com/instill-ai/${{ inputs.component }}.git
           cd ${{ inputs.component }}
-          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_HOST=${API_GATEWAY_BASE_PORT}
+          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}
+
 
       - name: Uppercase component name
         if: inputs.target == 'release'
@@ -80,4 +85,4 @@ jobs:
         run: |
           git clone -b v$COMPONENT_VERSION https://github.com/instill-ai/${{ inputs.component }}.git
           cd ${{ inputs.component }}
-          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_HOST=${API_GATEWAY_BASE_PORT}
+          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}
