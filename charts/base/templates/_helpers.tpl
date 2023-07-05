@@ -156,6 +156,11 @@ app.kubernetes.io/name: {{ include "base.name" . }}
   {{- printf "%s-temporal-ui" (include "base.fullname" .) -}}
 {{- end -}}
 
+{{/* api-gateway project */}}
+{{- define "base.apiGatewayBase.project" -}}
+  {{- printf "base" -}}
+{{- end -}}
+
 {{/* api-gateway-base service and container port */}}
 {{- define "base.apiGatewayBase.httpPort" -}}
   {{- printf "7080" -}}
