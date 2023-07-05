@@ -251,7 +251,8 @@ console-integration-test-latest:			## Run console integration test on the latest
 			cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
 			cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/bash -c 'cd /instill-ai/vdp && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
-			/bin/bash -c 'cd /instill-ai/vdp && make latest PROFILE=all EDITION=local-ce:test BASE_ENABLED=false' \
+			/bin/bash -c 'cd /instill-ai/vdp && make latest PROFILE=all EDITION=local-ce:test BASE_ENABLED=false' && \
+			/bin/bash -c 'rm -r $${TMP_CONFIG_DIR}/*' \
 		" && rm -r $${TMP_CONFIG_DIR}
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -261,7 +262,8 @@ console-integration-test-latest:			## Run console integration test on the latest
 			cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
 			cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/bash -c 'cd /instill-ai/model && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
-			/bin/bash -c 'cd /instill-ai/model && make latest PROFILE=all ITMODE_ENABLED=true EDITION=local-ce:test BASE_ENABLED=false' \
+			/bin/bash -c 'cd /instill-ai/model && make latest PROFILE=all ITMODE_ENABLED=true EDITION=local-ce:test BASE_ENABLED=false' && \
+			/bin/bash -c 'rm -r $${TMP_CONFIG_DIR}/*' \
 		" && rm -r $${TMP_CONFIG_DIR}
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
