@@ -36,10 +36,10 @@ data:
         redisoptions:
           addr: {{ default (include "base.redis.addr" .) .Values.redis.external.addr }}
     influxdb:
-      url: {{ template "base.influxdb.url" . }}
-      token: {{ .Values.influxdb2.adminUser.token }}
-      org: {{ .Values.influxdb2.adminUser.organization }}
-      bucket: {{ (index .Values.influxdb2.env 0).value }}
+      url: {{ .Values.influxdbCloud.url }}
+      token: {{ .Values.influxdbCloud.token }}
+      org: {{ .Values.influxdbCloud.organization }}
+      bucket: {{ .Values.influxdbCloud.bucket }}
       flushinterval: 10 # In seconds for non-blocking batch mode
       https:
         cert:

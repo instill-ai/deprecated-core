@@ -29,8 +29,6 @@ dependencies:
   - name: influxdb2
     repository: https://helm.influxdata.com
     version: 2.1.1
-    tags:
-      - observability
   - name: jaeger
     repository: https://jaegertracing.github.io/helm-charts
     version: 0.71.2

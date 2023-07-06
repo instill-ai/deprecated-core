@@ -759,6 +759,12 @@ temporal:
         default_to_namespace: default
         issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
 
+influxdbCloud:
+  url: 'https://instill.com'
+  token: "IloveInstill"
+  organization: "instill-ai"
+  bucket: 'Instill'
+
 elasticsearch:
   # -- If external Elasticsearch is used, set "enabled" to false
   # and fill the connection informations in "external" section
