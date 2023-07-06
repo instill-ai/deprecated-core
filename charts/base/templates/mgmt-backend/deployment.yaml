@@ -80,6 +80,10 @@ spec:
             - name: config
               mountPath: {{ .Values.mgmtBackend.configPath }}
               subPath: config.yaml
+          {{- with .Values.mgmtBackend.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         {{- with .Values.mgmtBackend.extraInitContainers }}
         {{- toYaml . | indent 8 }}
         {{- end }}
