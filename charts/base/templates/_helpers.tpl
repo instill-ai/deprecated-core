@@ -253,6 +253,10 @@ app.kubernetes.io/name: {{ include "base.name" . }}
   {{- printf "8086" -}}
 {{- end -}}
 
+{{- define "base.influxdb.url" -}}
+  {{- printf "http://%s:%s" (include "base.influxdb" .) (include "base.influxdb.port" .) -}}
+{{- end -}}
+
 {{- define "base.jaeger" -}}
   {{- printf "base-jaeger-collector" -}}
 {{- end -}}
