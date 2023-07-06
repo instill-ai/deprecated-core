@@ -35,3 +35,18 @@ data:
       redis:
         redisoptions:
           addr: {{ default (include "base.redis.addr" .) .Values.redis.external.addr }}
+    influxdb:
+      host: {{ template "base.influxdb" . }}
+      port: {{ default (include "base.influxdb.port" .) .Values.influxdb2.service.port }}
+      token: {{ .Values.influxdb2.adminUser.token }}
+      org: {{ .Values.influxdb2.adminUser.organization }}
+      bucket: {{ (index .Values.influxdb2.env 0).value }}
+      flushinterval: 10 # In seconds for non-blocking batch mode
+      https:
+        cert:
+        key:
+    log:
+      external: {{ .Values.tags.observability }}
+      otelcollector:
+        host: {{ template "base.otel" . }}
+        port: {{ template "base.otel.port" . }}
