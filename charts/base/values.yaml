@@ -794,7 +794,7 @@ influxdb2:
     token: "i-love-instill-ai"
   env:
     - name: DOCKER_INFLUXDB_BUCKET_VDP
-      value: vdp
+      value: instill-ai
   initScripts:
     enabled: true
     scripts:
