@@ -33,9 +33,6 @@ services:
       envsubst <config/.env.envsubst >config/.env &&
       make config &&
       krakend run -c krakend.json"
-    depends_on:
-      mgmt_backend:
-        condition: service_started
 
   mgmt_backend_migrate:
     container_name: ${MGMT_BACKEND_HOST}-migrate
@@ -66,7 +63,8 @@ services:
       CFG_LOG_OTELCOLLECTOR_PORT: ${OTEL_COLLECTOR_PORT}
     entrypoint: ./mgmt-backend-init
     depends_on:
-      - mgmt_backend_migrate
+      mgmt_backend_migrate:
+        condition: service_completed_successfully
 
   mgmt_backend:
     container_name: ${MGMT_BACKEND_HOST}
@@ -86,7 +84,8 @@ services:
       CFG_LOG_OTELCOLLECTOR_PORT: ${OTEL_COLLECTOR_PORT}
     entrypoint: ./mgmt-backend
     depends_on:
-      - mgmt_backend_init
+      mgmt_backend_init:
+        condition: service_completed_successfully
 
   console:
     container_name: ${CONSOLE_HOST}
@@ -109,8 +108,6 @@ services:
     ports:
       - ${CONSOLE_PORT}:${CONSOLE_PORT}
     entrypoint: ./entrypoint.sh
-    depends_on:
-      - api_gateway_base
 
   pg_sql:
     container_name: ${POSTGRESQL_HOST}
