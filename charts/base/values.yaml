@@ -964,4 +964,4 @@ grafana:
 
 tags:
   observability: true
-  promethueus-stack: false
+  promethueusStack: false
