@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - ins-1105-fix-the-the-integration-test-cicd-in-all-projects
+      - main
   workflow_call:
     inputs:
       target:
