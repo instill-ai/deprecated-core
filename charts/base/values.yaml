@@ -781,6 +781,12 @@ elasticsearch:
   ## -- The configuration of external Elasticsearch
   external:
 
+influxdbCloud:
+  url: "http://base-influxdb2:8086"
+  token: "i-love-instill-ai"
+  organization: "instill-ai"
+  bucket: "instill-ai"
+
 influxdb2:
   enabled: true
   service:
@@ -958,3 +964,4 @@ grafana:
 
 tags:
   observability: true
+  promethueusStack: false
