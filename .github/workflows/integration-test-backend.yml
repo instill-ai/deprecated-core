@@ -1,6 +1,10 @@
 name: Integration Test Reusable (backend)
 
 on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
   workflow_call:
     inputs:
       component:
@@ -11,9 +15,24 @@ on:
         type: string
 
 jobs:
-  integration-test:
+  integration-test-latest:
+    if: inputs.target != 'release'
     runs-on: ubuntu-latest
     steps:
+      # mono occupies port 8084 which conflicts with mgmt-backend
+      - name: Stop mono service
+        run: |
+          sudo kill -9 `sudo lsof -t -i:8084`
+          sudo lsof -i -P -n | grep LISTEN
+
+      - name: Free disk space
+        run: |
+          df --human-readable
+          sudo apt clean
+          docker rmi $(docker image ls --all --quiet)
+          rm --recursive --force "$AGENT_TOOLSDIRECTORY"
+          df --human-readable
+
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
@@ -24,23 +43,9 @@ jobs:
         with:
           envFile: .env
 
-      # mono occupies port 8084 which conflicts with mgmt-backend
-      - name: Stop mono service
-        run: |
-          sudo kill -9 `sudo lsof -t -i:8084`
-          sudo lsof -i -P -n | grep LISTEN
-
       - name: Install k6
         run: |
           curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin
-
-      - name: Free disk space
-        run: |
-          df --human-readable
-          sudo apt clean
-          docker rmi $(docker image ls --all --quiet)
-          rm --recursive --force "$AGENT_TOOLSDIRECTORY"
-          df --human-readable
 
       - name: Launch Instill Base (latest)
         if: inputs.target == 'latest'
@@ -55,9 +60,41 @@ jobs:
       - name: Run ${{ inputs.component }} integration test (latest)
         if: inputs.target == 'latest'
         run: |
-          git clone -b https://github.com/instill-ai/${{ inputs.component }}.git
+          git clone https://github.com/instill-ai/${{ inputs.component }}.git
           cd ${{ inputs.component }}
-          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_HOST=${API_GATEWAY_BASE_PORT}
+          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}
+
+  integration-test-release:
+    if: inputs.target == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      # mono occupies port 8084 which conflicts with mgmt-backend
+      - name: Stop mono service
+        run: |
+          sudo kill -9 `sudo lsof -t -i:8084`
+          sudo lsof -i -P -n | grep LISTEN
+
+      - name: Free disk space
+        run: |
+          df --human-readable
+          sudo apt clean
+          docker rmi $(docker image ls --all --quiet)
+          rm --recursive --force "$AGENT_TOOLSDIRECTORY"
+          df --human-readable
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Load .env file
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Install k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin
 
       - name: Uppercase component name
         if: inputs.target == 'release'
@@ -80,4 +117,4 @@ jobs:
         run: |
           git clone -b v$COMPONENT_VERSION https://github.com/instill-ai/${{ inputs.component }}.git
           cd ${{ inputs.component }}
-          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_HOST=${API_GATEWAY_BASE_PORT}
+          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}
