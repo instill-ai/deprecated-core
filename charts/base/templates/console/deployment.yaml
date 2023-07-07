@@ -92,10 +92,18 @@ spec:
               value: "{{ .Values.edition }}"
             - name: NEXT_PUBLIC_CONSOLE_BASE_URL
               value: "{{ .Values.consoleURL }}"
-            - name: NEXT_PUBLIC_API_GATEWAY_BASE_URL
+            - name: NEXT_PUBLIC_BASE_API_GATEWAY_URL
               value: "{{ .Values.apiGatewayBaseURL }}"
-            - name: NEXT_SERVER_API_GATEWAY_BASE_URL
-              value: {{ default (printf "http://%s:%s" (include "base.apiGatewayBase" .) (include "base.apiGatewayBase.httpPort" . )) .Values.console.serverApiGatewayBaseUrl }}
+            - name: NEXT_SERVER_BASE_API_GATEWAY_URL
+              value: {{ default (printf "http://%s:%s" (include "base.apiGatewayBase" .) (include "base.apiGatewayBase.httpPort" . )) .Values.console.serverApiGatewayBaseURL }}
+            - name: NEXT_PUBLIC_VDP_API_GATEWAY_URL
+              value: "{{ .Values.apiGatewayVDPURL }}"
+            - name: NEXT_SERVER_VDP_API_GATEWAY_URL
+              value: {{ .Values.console.serverApiGatewayVDPURL }}
+            - name: NEXT_PUBLIC_MODEL_API_GATEWAY_URL
+              value: "{{ .Values.apiGatewayModelURL }}"
+            - name: NEXT_SERVER_MODEL_API_GATEWAY_URL
+              value: {{ .Values.console.serverApiGatewayModelURL }}
             - name: NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME
               value: "instill-ai-user"
             - name: NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION

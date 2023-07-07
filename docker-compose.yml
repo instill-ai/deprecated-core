@@ -7,7 +7,7 @@ networks:
 services:
   api_gateway_base:
     container_name: ${API_GATEWAY_BASE_HOST}
-    image: ${API_GATEWAY_BASE_IMAGE}:${API_GATEWAY_BASE_VERSION}
+    image: ${API_GATEWAY_IMAGE}:${API_GATEWAY_VERSION}
     restart: unless-stopped
     environment:
       API_GATEWAY_PROJECT: base

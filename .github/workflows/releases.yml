@@ -75,7 +75,7 @@ jobs:
       - name: Update component image versions
         run: |
           source .env
-          yq ".apiGatewayBase.image.tag=\"$API_GATEWAY_BASE_VERSION\"" -i charts/base/values.yaml
+          yq ".apiGatewayBase.image.tag=\"$API_GATEWAY_VERSION\"" -i charts/base/values.yaml
           yq ".mgmtBackend.image.tag=\"$MGMT_BACKEND_VERSION\"" -i charts/base/values.yaml
           yq ".console.image.tag=\"$CONSOLE_VERSION\"" -i charts/base/values.yaml
       - name: Get current chart version

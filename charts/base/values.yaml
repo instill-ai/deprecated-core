@@ -131,6 +131,8 @@ expose:
 #
 # If Instill Base is deployed behind the proxy, set it as the URL of the proxy (without protocol and port)
 apiGatewayBaseURL: http://localhost:7080
+apiGatewayVDPURL: http://localhost:8080
+apiGatewayModelURL: http://localhost:9080
 consoleURL: http://localhost:3000
 
 # -- The internal TLS used for Instill Base services secure communicating. In order to enable https
@@ -333,8 +335,12 @@ console:
     repository: instill/console
     tag: 0.24.0-alpha
     pullPolicy: IfNotPresent
-  # -- The accessible endpoint for the api-gateway from the console server side
-  serverApiGatewayBaseUrl:
+  # -- The accessible endpoint for the api-gateway-base from the console server side
+  serverApiGatewayBaseURL:
+  # -- The accessible endpoint for the api-gateway-vdp from the console server side
+  serverApiGatewayVDPURL:
+    # -- The accessible endpoint for the api-gateway-model from the console server side
+  serverApiGatewayModelURL:
   # -- Set the service account to be used, default if left empty
   serviceAccountName: ""
   # -- Mount the service account token
@@ -964,4 +970,4 @@ grafana:
 
 tags:
   observability: true
-  promethueusStack: false
+  prometheusStack: false
