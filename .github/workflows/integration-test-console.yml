@@ -13,7 +13,7 @@ on:
 
 jobs:
   integration-test-latest:
-    if: inputs.target != 'release'
+    if: inputs.target == 'latest'
     runs-on: ubuntu-latest
     steps:
       # mono occupies port 8084 which conflicts with mgmt-backend
@@ -41,14 +41,13 @@ jobs:
           envFile: .env
 
       - name: Launch Instill Base (latest)
-        if: inputs.target == 'latest'
         run: |
           CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway-base \
           CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway-vdp \
           CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway-model \
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
-          docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull          
+          docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
           docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
@@ -64,7 +63,6 @@ jobs:
           envFile: .env
 
       - name: Launch Instill VDP (latest)
-        if: inputs.target == 'latest'
         run: |
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
@@ -84,13 +82,12 @@ jobs:
           envFile: .env
 
       - name: Launch Instill Model (latest)
-        if: inputs.target == 'latest'
         run: |
           ITMODE_ENABLED=true \
           TRITON_CONDA_ENV_PLATFORM=cpu \
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
-          docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull          
+          docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
           ITMODE_ENABLED=true \
           TRITON_CONDA_ENV_PLATFORM=cpu \
           COMPOSE_PROFILES=all \
@@ -98,7 +95,6 @@ jobs:
           docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 
       - name: Run console integration test (latest)
-        if: inputs.target == 'latest'
         run: |
           git clone https://github.com/instill-ai/console.git
           cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:latest .
@@ -148,7 +144,6 @@ jobs:
           envFile: .env
 
       - name: Launch Instill Base (release)
-        if: inputs.target == 'release'
         run: |
           CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway-base \
           CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway-vdp \
@@ -169,7 +164,6 @@ jobs:
           envFile: .env
 
       - name: Launch Instill VDP (release)
-        if: inputs.target == 'latest'
         run: |
           EDITION=local-ce:test \
           docker compose up -d --quiet-pull
@@ -187,7 +181,6 @@ jobs:
           envFile: .env
 
       - name: Launch Instill Model (release)
-        if: inputs.target == 'latest'
         run: |
           ITMODE_ENABLED=true \
           TRITON_CONDA_ENV_PLATFORM=cpu \
@@ -195,11 +188,10 @@ jobs:
           docker compose up -d --quiet-pull
           ITMODE_ENABLED=true \
           TRITON_CONDA_ENV_PLATFORM=cpu \
-          EDITION=local-ce:test \          
+          EDITION=local-ce:test \
           docker compose rm -f
 
       - name: Run console integration test (release)
-        if: inputs.target == 'release'
         run: |
           git clone -b v$CONSOLE_VERSION https://github.com/instill-ai/console.git
           cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:${{ env.CONSOLE_VERSION }} .
