@@ -67,12 +67,6 @@ COPY --from=docker:dind /usr/local/bin /usr/local/bin
 ARG CACHE_DATE
 RUN echo "Instill Base release codebase cloned on ${CACHE_DATE}"
 
-WORKDIR /instill-ai
-
-ARG VDP_VERSION MODEL_VERSION
-RUN git clone -b v${VDP_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/vdp.git
-RUN git clone -b v${MODEL_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/model.git
-
 WORKDIR /instill-ai/base
 
 ARG API_GATEWAY_VERSION MGMT_BACKEND_VERSION CONSOLE_VERSION
