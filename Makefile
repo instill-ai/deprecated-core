@@ -286,22 +286,32 @@ console-integration-test-latest:			## Run console integration test on the latest
 .PHONY: console-integration-test-release
 console-integration-test-release:			## Run console integration test on the release Instill Base
 	@make build-release
-	@EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway-base CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway-vdp CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway-model docker compose up -d --quiet-pull
-	@EDITION=local-ce:test docker compose rm -f
-	@docker run -it --rm \
+	@COMPOSE_PROFILES=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway-base CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway-vdp CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway-model docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
 		--name ${CONTAINER_COMPOSE_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd /instill-ai/vdp && EDITION=local-ce:test docker compose up -d --quiet-pull' \
-			/bin/bash -c 'cd /instill-ai/vdp && EDITION=local-ce:test docker compose rm -f' \
-		"
-	@docker run -it --rm \
+			cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
+			cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+			/bin/bash -c 'cd /instill-ai/vdp && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
+			/bin/bash -c 'cd /instill-ai/vdp && COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull' && \
+			/bin/bash -c 'cd /instill-ai/vdp && COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f' && \
+			/bin/bash -c 'rm -r $${TMP_CONFIG_DIR}/*' \
+		" && rm -r $${TMP_CONFIG_DIR}
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
 		--name ${CONTAINER_COMPOSE_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd /instill-ai/model && EDITION=local-ce:test ITMODE_ENABLED=true TRITON_CONDA_ENV_PLATFORM=cpu docker compose up -d --quiet-pull' \
-			/bin/bash -c 'cd /instill-ai/model && EDITION=local-ce:test ITMODE_ENABLED=true TRITON_CONDA_ENV_PLATFORM=cpu docker compose rm -f' \
-		"
+			cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
+			cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+			/bin/bash -c 'cd /instill-ai/model && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
+			/bin/bash -c 'cd /instill-ai/model && COMPOSE_PROFILES=all EDITION=local-ce:test ITMODE_ENABLED=true TRITON_CONDA_ENV_PLATFORM=cpu docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull' && \
+			/bin/bash -c 'cd /instill-ai/model && COMPOSE_PROFILES=all EDITION=local-ce:test ITMODE_ENABLED=true TRITON_CONDA_ENV_PLATFORM=cpu docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f' && \
+			/bin/bash -c 'rm -r $${TMP_CONFIG_DIR}/*' \
+		" && rm -r $${TMP_CONFIG_DIR}
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
@@ -453,24 +463,48 @@ console-helm-integration-test-release:                       ## Run console inte
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
-	@helm install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
-		--set edition=k8s-ce:test \
-		--set apiGatewayVDP.image.tag=${API_GATEWAY_VERSION} \
-		--set pipelineBackend.image.tag={PIPELINE_BACKEND_VERSION} \
-		--set connector.image.tag=latest \
-		--set controllerVDP.image.tag=latest \
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
+		-v ${HOME}/.kube/config:/instill-ai/kubeconfig \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
+		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+			cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
+			cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+			/bin/bash -c 'cd /instill-ai/vdp && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
+			/bin/bash -c 'cd /instill-ai/vdp && \
+				helm --kubeconfig /instill-ai/kubeconfig install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
+					--set edition=k8s-ce:test \
+					--set apiGatewayVDP.image.tag=latest \
+					--set pipelineBackend.image.tag=latest \
+					--set connectorBackend.image.tag=latest \
+					--set controllerVDP.image.tag=latest' \
+			/bin/bash -c 'rm -r $${TMP_CONFIG_DIR}/*' \
+		" && rm -r $${TMP_CONFIG_DIR}
 	@kubectl rollout status deployment vdp-api-gateway-vdp --namespace ${HELM_NAMESPACE} --timeout=120s
-	@export API_GATEWAY_VDP_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=vdp" -o jsonpath="{.items[0].metadata.name}") && \
+	@export API_GATEWAY_VDP_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-vdp,app.kubernetes.io/instance=vdp" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_VDP_POD_NAME} ${API_GATEWAY_VDP_PORT}:${API_GATEWAY_VDP_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_VDP_PORT} > /dev/null 2>&1; do sleep 1; done
-	@helm install model charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
-		--set edition=k8s-ce:test \
-		--set apiGatewayModel.image.tag=latest \
-		--set modelBackend.image.tag=latest \
-		--set controllerModel.image.tag=latest \
-		--set itMode.enabled=true \
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
+		-v ${HOME}/.kube/config:/instill-ai/kubeconfig \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
+		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+			cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
+			cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+			/bin/bash -c 'cd /instill-ai/model && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
+			/bin/bash -c 'cd /instill-ai/model && \
+				helm --kubeconfig /instill-ai/kubeconfig install model charts/model --namespace ${HELM_NAMESPACE} --create-namespace \
+						--set edition=k8s-ce:test \
+						--set apiGatewayModel.image.tag=latest \
+						--set modelBackend.image.tag=latest \
+						--set controllerModel.image.tag=latest \
+						--set itMode.enabled=true' \
+			/bin/bash -c 'rm -r $${TMP_CONFIG_DIR}/*' \
+		" && rm -r $${TMP_CONFIG_DIR}
 	@kubectl rollout status deployment model-api-gateway-model --namespace ${HELM_NAMESPACE} --timeout=120s
-	@export API_GATEWAY_MODEL_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=model" -o jsonpath="{.items[0].metadata.name}") && \
+	@export API_GATEWAY_MODEL_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-model,app.kubernetes.io/instance=model" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_MODEL_POD_NAME} ${API_GATEWAY_MODEL_PORT}:${API_GATEWAY_MODEL_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_MODEL_PORT} > /dev/null 2>&1; do sleep 1; done
 ifeq ($(UNAME_S),Darwin)

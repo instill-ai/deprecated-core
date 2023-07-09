@@ -212,7 +212,7 @@ apiGatewayBase:
   # -- The image of api-gateway-base
   image:
     repository: instill/api-gateway
-    tag: 0.2.8-alpha
+    tag: 0.3.0-alpha
     pullPolicy: IfNotPresent
   # -- The path of configuration file for api-gateway-base
   configPath: /api-gateway/config/.env
@@ -269,7 +269,7 @@ mgmtBackend:
   # -- The image of mgmt-backend
   image:
     repository: instill/mgmt-backend
-    tag: 0.3.9-alpha
+    tag: 0.3.11-alpha
     pullPolicy: IfNotPresent
   # -- The command names to be executed
   commandName:
@@ -333,7 +333,7 @@ console:
   # -- The image of console
   image:
     repository: instill/console
-    tag: 0.24.0-alpha
+    tag: 0.25.0-alpha
     pullPolicy: IfNotPresent
   # -- The accessible endpoint for the api-gateway-base from the console server side
   serverApiGatewayBaseURL:
