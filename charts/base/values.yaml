@@ -1,24 +1,18 @@
 ## -- Provide a name in place of base
 nameOverride: ""
-
 ## -- Override the deployment namespace
 namespaceOverride: ""
-
 ## -- Provide a name to substitute for the full names of resources
 fullnameOverride: ""
-
 # -- The update strategy for deployments with persistent volumes: "RollingUpdate" or "Recreate"
 # Set it as "Recreate" when "RWM" for volumes isn't supported
 updateStrategy:
   type: RollingUpdate
-
 # -- Logging level: debug, info, warning, error or fatal
 logLevel: info
-
 # -- Enable development mode
 # if edition is "k8s-ce:dev", console will be launched with CODE_ENV=development. Otherwise, CODE_ENV=production
 edition: k8s-ce
-
 # -- Use this set to assign a list of default pullSecrets
 imagePullSecrets:
 expose:
@@ -117,7 +111,6 @@ expose:
       temporal:
     # Annotations on the LoadBalancer service
     annotations: {}
-
 # -- The external URL for Instill Base services. It is used to
 # populate the API endpoints showed on the console
 #
@@ -134,7 +127,6 @@ apiGatewayBaseURL: http://localhost:7080
 apiGatewayVDPURL: http://localhost:8080
 apiGatewayModelURL: http://localhost:9080
 consoleURL: http://localhost:3000
-
 # -- The internal TLS used for Instill Base services secure communicating. In order to enable https
 # in each components tls cert files need to provided in advance.
 internalTLS:
@@ -171,7 +163,6 @@ internalTLS:
     crt: ""
     # Content of console's TLS key file, only available when `certSource` is "manual"
     key: ""
-
 # -- The persistence is enabled by default and a default StorageClass
 # is needed in the k8s cluster to provision volumes dynamically.
 # Specify another StorageClass in the "storageClass" or set "existingClaim"
@@ -200,14 +191,12 @@ persistence:
       accessMode: ReadWriteOnce
       size: 128Mi
       annotations: {}
-
 # -- The usage collector configuration
 usage:
   enabled: true
   tlsenabled: true
   host: usage.instill.tech
   port: 443
-
 apiGatewayBase:
   # -- The image of api-gateway-base
   image:
@@ -264,7 +253,6 @@ apiGatewayBase:
     spec:
       minAvailable:
       maxUnavailable:
-
 mgmtBackend:
   # -- The image of mgmt-backend
   image:
@@ -326,7 +314,6 @@ mgmtBackend:
     spec:
       minAvailable:
       maxUnavailable:
-
 console:
   # -- Enable console deployment or not
   enabled: true
@@ -339,7 +326,7 @@ console:
   serverApiGatewayBaseURL:
   # -- The accessible endpoint for the api-gateway-vdp from the console server side
   serverApiGatewayVDPURL:
-    # -- The accessible endpoint for the api-gateway-model from the console server side
+  # -- The accessible endpoint for the api-gateway-model from the console server side
   serverApiGatewayModelURL:
   # -- Set the service account to be used, default if left empty
   serviceAccountName: ""
@@ -386,7 +373,6 @@ console:
     spec:
       minAvailable:
       maxUnavailable:
-
 database:
   # -- If external database is used, set "enabled" to false
   # and fill the connection informations in "external" section
@@ -435,7 +421,6 @@ database:
     port:
     username:
     password:
-
 etcd:
   persistence:
     enabled: false
@@ -444,7 +429,6 @@ etcd:
       create: false
   autoCompactionMode: revision
   autoCompactionRetention: 1
-
 redis:
   # -- If external Redis is used, set "enabled" to false
   # and fill the connection informations in "external" section
@@ -473,7 +457,6 @@ redis:
   external:
     # -- Address for redis: <host_redis>:<port_redis>
     addr:
-
 temporal:
   # -- Enable Temporal deployment or not
   enabled: true
@@ -764,7 +747,6 @@ temporal:
       routing:
         default_to_namespace: default
         issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
-
 elasticsearch:
   # -- If external Elasticsearch is used, set "enabled" to false
   # and fill the connection informations in "external" section
@@ -786,13 +768,11 @@ elasticsearch:
       xpack.security.enabled: false
   ## -- The configuration of external Elasticsearch
   external:
-
 influxdbCloud:
   url: "http://base-influxdb2:8086"
   token: "i-love-instill-ai"
   organization: "instill-ai"
   bucket: "instill-ai"
-
 influxdb2:
   enabled: true
   service:
@@ -816,7 +796,6 @@ influxdb2:
         influx v1 dbrp create --db ${DOCKER_INFLUXDB_INIT_BUCKET} --rp ${DOCKER_INFLUXDB_INIT_RETENTION} --bucket-id ${BUCKET_ID} --default
         influx v1 auth create --username ${DOCKER_INFLUXDB_INIT_USERNAME} --password ${DOCKER_INFLUXDB_INIT_PASSWORD} --write-bucket ${BUCKET_ID} --org ${DOCKER_INFLUXDB_INIT_ORG}
         influx bucket create --name ${DOCKER_INFLUXDB_BUCKET_VDP} --org ${DOCKER_INFLUXDB_INIT_ORG} --token ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN} --retention ${DOCKER_INFLUXDB_INIT_RETENTION}
-
 jaeger:
   provisionDataStore:
     cassandra: false
@@ -913,7 +892,6 @@ opentelemetry-collector:
             - batch
           exporters:
             - logging
-
 prometheus:
   prometheus-node-exporter:
     enabled: false
@@ -926,7 +904,6 @@ prometheus:
         - targets:
             - "http://base-opentelemetry-collector:9001"
             - "http://base-api-gateway-base:9000"
-
 grafana:
   adminPassword: password
   dashboards:
@@ -945,7 +922,6 @@ grafana:
           updateIntervalSeconds: 60
           options:
             path: /var/lib/grafana/dashboards/default
-
   datasources:
     datasources.yaml:
       apiVersion: 1
@@ -967,7 +943,6 @@ grafana:
             version: Flux
           secureJsonData:
             token: i-love-instill-ai
-
 tags:
   observability: true
   prometheusStack: false
