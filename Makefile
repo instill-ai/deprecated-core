@@ -27,11 +27,13 @@ HELM_RELEASE_NAME := base
 
 .PHONY: all
 all:			## Launch all services with their up-to-date release version
+	@make build-release
 	@EDITION=local-ce docker compose ${COMPOSE_FILES} up -d --quiet-pull
 	@EDITION=local-ce docker compose ${COMPOSE_FILES} rm -f
 
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
+	@make build-latest
 	@COMPOSE_PROFILES=$(PROFILE) EDITION=local-ce:latest docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=$(PROFILE) EDITION=local-ce:latest docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml rm -f
 
@@ -73,7 +75,6 @@ down:			## Stop all services and remove all service containers and volumes
 	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-release >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_COMPOSE_NAME}-latest >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_COMPOSE_NAME}-release >/dev/null 2>&1
-	@docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
 	@if docker compose ls -q | grep -q "instill-model"; then \
 		docker run -it --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
@@ -90,6 +91,7 @@ down:			## Stop all services and remove all service containers and volumes
 				/bin/bash -c 'cd /instill-ai/vdp && make down' \
 			"; \
 	fi
+	@docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
 
 .PHONY: images
 images:			## List all container images
@@ -358,6 +360,7 @@ console-helm-integration-test-latest:                       ## Run console integ
 		-v ${HOME}/.kube/config:/instill-ai/kubeconfig \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+		--network=host \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 			cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
@@ -380,6 +383,7 @@ console-helm-integration-test-latest:                       ## Run console integ
 		-v ${HOME}/.kube/config:/instill-ai/kubeconfig \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+		--network=host \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 			cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
