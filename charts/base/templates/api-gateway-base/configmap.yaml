@@ -5,7 +5,6 @@ metadata:
 data:
   .env: |-
     LOG_LEVEL={{ upper .Values.logLevel }}
-    OBSERVE_ENABLED={{ .Values.tags.observability }}
 
     # api-gateway
     API_GATEWAY_HOST={{ template "base.apiGatewayBase" . }}
@@ -23,7 +22,6 @@ data:
     MGMT_BACKEND_PUBLICPORT={{ template "base.mgmtBackend.publicPort" . }}
 
     # influxdb
-    INFLUXDB_ENABLED={{ .Values.tags.observability }}
     INFLUXDB_HOST={{ template "base.influxdb" . }}
     INFLUXDB_PORT={{ template "base.influxdb.port" . }}
 
