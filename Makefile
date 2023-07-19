@@ -78,7 +78,7 @@ down:			## Stop all services and remove all service containers and volumes
 	@if docker compose ls -q | grep -q "instill-model"; then \
 		docker run -it --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
-			--name ${CONTAINER_COMPOSE_NAME} \
+			--name ${CONTAINER_COMPOSE_NAME}-model \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 				/bin/bash -c 'cd /instill-ai/model && make down' \
 			"; \
@@ -86,7 +86,7 @@ down:			## Stop all services and remove all service containers and volumes
 	@if docker compose ls -q | grep -q "instill-vdp"; then \
 		docker run -it --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
-			--name ${CONTAINER_COMPOSE_NAME} \
+			--name ${CONTAINER_COMPOSE_NAME}-vdp \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 				/bin/bash -c 'cd /instill-ai/vdp && make down' \
 			"; \
