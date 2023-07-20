@@ -163,12 +163,14 @@ jobs:
         with:
           envFile: .env
 
-      - name: Launch Instill VDP (release)
+      - name: Launch Instill VDP (latest)
         run: |
+          COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
-          docker compose up -d --quiet-pull
+          docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+          COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
-          docker compose rm -f
+          docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 
       - name: Checkout repo (model)
         uses: actions/checkout@v3
@@ -180,16 +182,18 @@ jobs:
         with:
           envFile: .env
 
-      - name: Launch Instill Model (release)
+      - name: Launch Instill Model (latest)
         run: |
           ITMODE_ENABLED=true \
           TRITON_CONDA_ENV_PLATFORM=cpu \
+          COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
-          docker compose up -d --quiet-pull
+          docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
           ITMODE_ENABLED=true \
           TRITON_CONDA_ENV_PLATFORM=cpu \
+          COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
-          docker compose rm -f
+          docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 
       - name: Run console integration test (release)
         run: |
