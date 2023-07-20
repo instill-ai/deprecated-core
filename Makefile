@@ -357,17 +357,17 @@ console-helm-integration-test-latest:                       ## Run console integ
 	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
-		-v ${HOME}/.kube/config:/instill-ai/kubeconfig \
+		-v ${HOME}/.kube/config:/root/.kube/config \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
-		--network=host \
+		${DOCKER_HELM_IT_EXTRA_PARAMS} \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 			cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
 			cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/bash -c 'cd /instill-ai/vdp && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
 			/bin/bash -c 'cd /instill-ai/vdp && \
-				helm --kubeconfig /instill-ai/kubeconfig install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
+				helm install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
 					--set edition=k8s-ce:test \
 					--set apiGatewayVDP.image.tag=latest \
 					--set pipelineBackend.image.tag=latest \
@@ -380,17 +380,17 @@ console-helm-integration-test-latest:                       ## Run console integ
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_VDP_POD_NAME} ${API_GATEWAY_VDP_PORT}:${API_GATEWAY_VDP_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_VDP_PORT} > /dev/null 2>&1; do sleep 1; done
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
-		-v ${HOME}/.kube/config:/instill-ai/kubeconfig \
+		-v ${HOME}/.kube/config:/root/.kube/config \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
-		--network=host \
+		${DOCKER_HELM_IT_EXTRA_PARAMS} \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 			cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
 			cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/bash -c 'cd /instill-ai/model && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
 			/bin/bash -c 'cd /instill-ai/model && \
-				helm --kubeconfig /instill-ai/kubeconfig install model charts/model --namespace ${HELM_NAMESPACE} --create-namespace \
+				helm install model charts/model --namespace ${HELM_NAMESPACE} --create-namespace \
 						--set edition=k8s-ce:test \
 						--set apiGatewayModel.image.tag=latest \
 						--set modelBackend.image.tag=latest \
@@ -468,16 +468,17 @@ console-helm-integration-test-release:                       ## Run console inte
 	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
-		-v ${HOME}/.kube/config:/instill-ai/kubeconfig \
+		-v ${HOME}/.kube/config:/root/.kube/config \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+		${DOCKER_HELM_IT_EXTRA_PARAMS} \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 			cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
 			cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/bash -c 'cd /instill-ai/vdp && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
 			/bin/bash -c 'cd /instill-ai/vdp && \
-				helm --kubeconfig /instill-ai/kubeconfig install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
+				helm install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
 					--set edition=k8s-ce:test \
 					--set apiGatewayVDP.image.tag=latest \
 					--set pipelineBackend.image.tag=latest \
@@ -490,16 +491,17 @@ console-helm-integration-test-release:                       ## Run console inte
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_VDP_POD_NAME} ${API_GATEWAY_VDP_PORT}:${API_GATEWAY_VDP_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_VDP_PORT} > /dev/null 2>&1; do sleep 1; done
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
-		-v ${HOME}/.kube/config:/instill-ai/kubeconfig \
+		-v ${HOME}/.kube/config:/root/.kube/config \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+		${DOCKER_HELM_IT_EXTRA_PARAMS} \
 		--name ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
 			cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
 			cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/bash -c 'cd /instill-ai/model && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
 			/bin/bash -c 'cd /instill-ai/model && \
-				helm --kubeconfig /instill-ai/kubeconfig install model charts/model --namespace ${HELM_NAMESPACE} --create-namespace \
+				helm install model charts/model --namespace ${HELM_NAMESPACE} --create-namespace \
 						--set edition=k8s-ce:test \
 						--set apiGatewayModel.image.tag=latest \
 						--set modelBackend.image.tag=latest \
