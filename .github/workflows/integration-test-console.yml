@@ -210,4 +210,4 @@ jobs:
             --network instill-network \
             --entrypoint ./entrypoint-playwright.sh \
             --name console-integration-test \
-            console-playwright:latest
+            console-playwright:${{ env.CONSOLE_VERSION }}
