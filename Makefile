@@ -463,6 +463,7 @@ endif
 .PHONY: console-helm-integration-test-release
 console-helm-integration-test-release:                       ## Run console integration test on the Helm release for Instill Base
 	@make build-release
+ifeq ($(UNAME_S),Darwin)
 	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
 		--set tags.observability=false \
@@ -477,6 +478,22 @@ console-helm-integration-test-release:                       ## Run console inte
 		--set apiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
 		--set console.serverApiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
 		--set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
+else ifeq ($(UNAME_S),Linux)
+	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
+		--set edition=k8s-ce:test \
+		--set tags.observability=false \
+		--set tags.prometheusStack=false \
+		--set apiGatewayBase.image.tag=${API_GATEWAY_VERSION} \
+		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
+		--set console.image.tag=${CONSOLE_VERSION} \
+		--set apiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT} \
+		--set console.serverApiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT} \
+		--set apiGatewayVDPURL=http://localhost:${API_GATEWAY_VDP_PORT} \
+		--set console.serverApiGatewayVDPURL=http://localhost:${API_GATEWAY_VDP_PORT} \
+		--set apiGatewayModelURL=http://localhost:${API_GATEWAY_MODEL_PORT} \
+		--set console.serverApiGatewayModelURL=http://localhost:${API_GATEWAY_MODEL_PORT} \
+		--set consoleURL=http://localhost:${CONSOLE_PORT}
+endif
 	@kubectl rollout status deployment base-api-gateway-base --namespace ${HELM_NAMESPACE} --timeout=120s
 	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
