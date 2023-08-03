@@ -389,6 +389,7 @@ endif
 					--set apiGatewayVDP.image.tag=latest \
 					--set pipelineBackend.image.tag=latest \
 					--set connectorBackend.image.tag=latest \
+					--set connectorBackend.excludelocalconnector=false \
 					--set controllerVDP.image.tag=latest' \
 			/bin/bash -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
@@ -517,6 +518,7 @@ endif
 					--set apiGatewayVDP.image.tag=latest \
 					--set pipelineBackend.image.tag=latest \
 					--set connectorBackend.image.tag=latest \
+					--set connectorBackend.excludelocalconnector=false \
 					--set controllerVDP.image.tag=latest' \
 			/bin/bash -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
