@@ -59,6 +59,7 @@ services:
       CFG_DATABASE_PASSWORD: password
       CFG_LOG_EXTERNAL: ${OBSERVE_ENABLED}
       CFG_LOG_OTELCOLLECTOR_PORT: ${OTEL_COLLECTOR_PORT}
+      CFG_SERVER_DEFAULTUSERUID: ${DEFAULT_USER_UID}
     entrypoint: ./mgmt-backend-init
     depends_on:
       mgmt_backend_migrate:
