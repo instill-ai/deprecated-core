@@ -23,18 +23,26 @@ CONTAINER_CONSOLE_INTEGRATION_TEST_NAME := base-console-integration-test
 HELM_NAMESPACE := instill-ai
 HELM_RELEASE_NAME := base
 
+# check or generate uuid for user
+ifeq ($(wildcard ${SYSTEM_CONFIG_PATH}/user_uid),)
+$(shell mkdir -p ${SYSTEM_CONFIG_PATH})
+$(shell uuidgen >> ${SYSTEM_CONFIG_PATH}/user_uid)
+endif
+DEFAULT_USER_UID := $(shell cat ${SYSTEM_CONFIG_PATH}/user_uid)
+
 #============================================================================
 
 .PHONY: all
 all:			## Launch all services with their up-to-date release version
 	@make build-release
-	@EDITION=local-ce docker compose ${COMPOSE_FILES} up -d --quiet-pull
+	@EDITION=local-ce DEFAULT_USER_UID=${DEFAULT_USER_UID} docker compose ${COMPOSE_FILES} up -d --quiet-pull
 	@EDITION=local-ce docker compose ${COMPOSE_FILES} rm -f
 
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
 	@make build-latest
-	@COMPOSE_PROFILES=$(PROFILE) EDITION=local-ce:latest docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
+	@echo ${DEFAULT_USER_UID}
+	@COMPOSE_PROFILES=$(PROFILE) DEFAULT_USER_UID=${DEFAULT_USER_UID} EDITION=local-ce:latest docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=$(PROFILE) EDITION=local-ce:latest docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml rm -f
 
 .PHONY: logs
