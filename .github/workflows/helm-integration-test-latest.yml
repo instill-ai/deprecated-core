@@ -1,6 +1,7 @@
 name: Helm Integration Test (latest)
 
 on:
+  workflow_dispatch:
   push:
     branches-ignore:
       - release-please--branches--main
