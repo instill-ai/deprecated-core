@@ -1,0 +1,145 @@
+name: Helm Integration Test Reusable (backend)
+
+on:
+  workflow_call:
+    inputs:
+      component:
+        required: true
+        type: string
+      target:
+        required: true
+        type: string    
+
+jobs:
+  helm-integration-test-latest:
+    if: inputs.target == 'latest'
+    runs-on: ubuntu-latest
+    steps:
+      # mono occupies port 8084 which conflicts with mgmt-backend
+      - name: Stop mono service
+        run: |
+          sudo kill -9 `sudo lsof -t -i:8084`
+          sudo lsof -i -P -n | grep LISTEN
+
+      - name: Free disk space
+        run: |
+          df --human-readable
+          sudo apt clean
+          docker rmi $(docker image ls --all --quiet)
+          rm --recursive --force "$AGENT_TOOLSDIRECTORY"
+          df --human-readable
+
+      - name: Start Minikube
+        run: minikube start
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Load .env file
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Install k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin
+
+      - name: Launch Helm Instill Base (latest)
+        run: |
+          helm install base charts/base --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set apiGatewayBase.image.tag=latest \
+            --set mgmtBackend.image.tag=latest \
+            --set console.image.tag=latest \
+            --set tags.observability=false
+
+      - name: Wait for base pods up
+        run: |
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+            echo "$(kubectl get pods --namespace instill-ai)"
+            sleep 10
+          done
+
+      - name: Port-forward of base-api-gateway
+        run: |
+          API_GATEWAY_BASE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+          while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+
+      - name: Run ${{ inputs.component }} integration test (latest)
+        run: |
+          git clone https://github.com/instill-ai/${{ inputs.component }}.git
+          cd ${{ inputs.component }}
+          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}
+
+  helm-integration-test-release:
+    if: inputs.target == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      # mono occupies port 8084 which conflicts with mgmt-backend
+      - name: Stop mono service
+        run: |
+          sudo kill -9 `sudo lsof -t -i:8084`
+          sudo lsof -i -P -n | grep LISTEN
+
+      - name: Free disk space
+        run: |
+          df --human-readable
+          sudo apt clean
+          docker rmi $(docker image ls --all --quiet)
+          rm --recursive --force "$AGENT_TOOLSDIRECTORY"
+          df --human-readable
+
+      - name: Start Minikube
+        run: minikube start
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Load .env file
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Install k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin    
+
+      - name: Uppercase component name
+        id: uppercase
+        run: |
+          echo "COMPONENT_NAME=$(echo ${{ inputs.component }} | tr 'a-z-' 'A-Z_')" >> $GITHUB_OUTPUT
+
+      - name: Launch Helm Instill Base (release)
+        run: |
+          helm install base charts/base --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set apiGatewayBase.image.tag=${API_GATEWAY_VERSION} \
+            --set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
+            --set console.image.tag=${CONSOLE_VERSION} \
+            --set tags.observability=false
+
+      - name: Wait for base pods up
+        run: |
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+            echo "$(kubectl get pods --namespace instill-ai)"
+            sleep 10
+          done
+
+      - name: Port-forward of base-api-gateway
+        run: |
+          API_GATEWAY_BASE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+          while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done 
+
+      - name: Run ${{ inputs.component }} integration test (release)
+        env:
+          COMPONENT_VERSION: ${{ env[format('{0}_VERSION', steps.uppercase.outputs.COMPONENT_NAME)] }}
+        run: |
+          git clone -b v$COMPONENT_VERSION https://github.com/instill-ai/${{ inputs.component }}.git
+          cd ${{ inputs.component }}
+          make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}
