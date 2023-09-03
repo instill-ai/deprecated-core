@@ -54,7 +54,7 @@ RUN git clone https://github.com/instill-ai/model.git
 
 WORKDIR /instill-ai/base
 
-RUN git clone https://github.com/instill-ai/api-gateway.git
+RUN git clone -b huitang/ins-1695-update-api-gateway-to-merge-base-vdp-model-into-base https://github.com/instill-ai/api-gateway.git
 RUN git clone https://github.com/instill-ai/mgmt-backend.git
 RUN git clone https://github.com/instill-ai/console.git
 
