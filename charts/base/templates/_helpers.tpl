@@ -128,6 +128,21 @@ app.kubernetes.io/name: {{ include "base.name" . }}
   {{- printf "%s-mgmt-backend" (include "base.fullname" .) -}}
 {{- end -}}
 
+# We have hardcoded the vdp.fullname here; it should be further improved.
+{{- define "vdp.pipelineBackend" -}}
+  {{- printf "vdp-pipeline-backend" -}}
+{{- end -}}
+
+# We have hardcoded the vdp.fullname here; it should be further improved.
+{{- define "vdp.connectorBackend" -}}
+  {{- printf "vdp-connector-backend" -}}
+{{- end -}}
+
+# We have hardcoded the vdp.fullname here; it should be further improved.
+{{- define "model.modelBackend" -}}
+  {{- printf "model-model-backend" -}}
+{{- end -}}
+
 {{- define "base.console" -}}
   {{- printf "%s-console" (include "base.fullname" .) -}}
 {{- end -}}
@@ -163,17 +178,17 @@ app.kubernetes.io/name: {{ include "base.name" . }}
 
 {{/* api-gateway-base service and container port */}}
 {{- define "base.apiGatewayBase.httpPort" -}}
-  {{- printf "7080" -}}
+  {{- printf "8080" -}}
 {{- end -}}
 
 {{/* api-gateway-base service and container stats port */}}
 {{- define "base.apiGatewayBase.statsPort" -}}
-  {{- printf "7070" -}}
+  {{- printf "8070" -}}
 {{- end -}}
 
 {{/* api-gateway-base service and container metrics port */}}
 {{- define "base.apiGatewayBase.metricsPort" -}}
-  {{- printf "7071" -}}
+  {{- printf "8071" -}}
 {{- end -}}
 
 {{/* mgmt-backend service and container public port */}}
@@ -184,6 +199,21 @@ app.kubernetes.io/name: {{ include "base.name" . }}
 {{/* mgmt-backend service and container private port */}}
 {{- define "base.mgmtBackend.privatePort" -}}
   {{- printf "3084" -}}
+{{- end -}}
+
+{{/* mgmt-backend service and container public port */}}
+{{- define "vdp.pipelineBackend.publicPort" -}}
+  {{- printf "8081" -}}
+{{- end -}}
+
+{{/* connector-backend service and container public port */}}
+{{- define "vdp.connectorBackend.publicPort" -}}
+  {{- printf "8082" -}}
+{{- end -}}
+
+{{/* model-backend service and container public port */}}
+{{- define "model.modelBackend.publicPort" -}}
+  {{- printf "8083" -}}
 {{- end -}}
 
 {{/* console service and container port */}}

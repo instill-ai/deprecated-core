@@ -6,11 +6,9 @@ services:
       - all
       - mgmt
       - console
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${API_GATEWAY_IMAGE}:latest
@@ -22,11 +20,9 @@ services:
       - all
       - api-gateway-base
       - console
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${MGMT_BACKEND_IMAGE}:latest
@@ -36,11 +32,9 @@ services:
       - all
       - api-gateway-base
       - console
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${MGMT_BACKEND_IMAGE}:latest
@@ -50,11 +44,9 @@ services:
       - all
       - api-gateway-base
       - console
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${MGMT_BACKEND_IMAGE}:latest
@@ -70,11 +62,9 @@ services:
       - all
       - api-gateway-base
       - mgmt
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${CONSOLE_IMAGE}:latest

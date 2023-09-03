@@ -21,6 +21,18 @@ data:
     MGMT_BACKEND_HOST={{ template "base.mgmtBackend" . }}
     MGMT_BACKEND_PUBLICPORT={{ template "base.mgmtBackend.publicPort" . }}
 
+    # mgmt-backend
+    PIPELINE_BACKEND_HOST={{ template "vdp.pipelineBackend" . }}
+    PIPELINE_BACKEND_PUBLICPORT={{ template "vdp.pipelineBackend.publicPort" . }}
+
+    # mgmt-backend
+    CONNECTOR_BACKEND_HOST={{ template "vdp.connectorBackend" . }}
+    CONNECTOR_BACKEND_PUBLICPORT={{ template "vdp.connectorBackend.publicPort" . }}
+
+    # mgmt-backend
+    MODEL_BACKEND_HOST={{ template "model.modelBackend" . }}
+    MODEL_BACKEND_PUBLICPORT={{ template "model.modelBackend.publicPort" . }}
+
     # influxdb
     INFLUXDB_HOST={{ template "base.influxdb" . }}
     INFLUXDB_PORT={{ template "base.influxdb.port" . }}
