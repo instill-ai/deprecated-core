@@ -297,3 +297,21 @@ app.kubernetes.io/name: {{ include "base.name" . }}
 {{- define "base.ingress.kubeVersion" -}}
   {{- default .Capabilities.KubeVersion.Version .Values.expose.ingress.kubeVersionOverride -}}
 {{- end -}}
+
+{{- define "vdp.pipelineBackend" -}}
+  {{- print "vdp-pipeline-backend" -}}
+{{- end -}}
+
+{{/* pipeline service and container public port */}}
+{{- define "vdp.pipelineBackend.publicPort" -}}
+  {{- print "8081" -}}
+{{- end -}}
+
+{{- define "vdp.connectorBackend" -}}
+  {{- print "vdp-connector-backend" -}}
+{{- end -}}
+
+{{/* connector service and container public port */}}
+{{- define "vdp.connectorBackend.publicPort" -}}
+  {{- print "8082" -}}
+{{- end -}}

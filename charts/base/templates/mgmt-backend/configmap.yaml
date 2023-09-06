@@ -19,6 +19,22 @@ data:
         cert: /etc/instill-ai/base/ssl/mgmt/tls.crt
         key: /etc/instill-ai/base/ssl/mgmt/tls.key
       {{- end }}
+    connectorbackend:
+      host: {{ template "vdp.connectorBackend" . }}
+      publicport: {{ template "vdp.connectorBackend.publicPort" . }}
+      {{- if .Values.internalTLS.enabled }}
+      https:
+        cert: /etc/instill-ai/vdp/ssl/connector/tls.crt
+        key: /etc/instill-ai/vdp/ssl/connector/tls.key
+      {{- end }}
+    pipelinebackend:
+      host: {{ template "vdp.pipelineBackend" . }}
+      publicport: {{ template "vdp.pipelineBackend.publicPort" . }}
+      {{- if .Values.internalTLS.enabled }}
+      https:
+        cert: /etc/instill-ai/vdp/ssl/pipeline/tls.crt
+        key: /etc/instill-ai/vdp/ssl/pipeline/tls.key
+      {{- end }}
     database:
       username: {{ default (include "base.database.username" .) .Values.database.external.username }}
       password: {{ default (include "base.database.rawPassword" .) .Values.database.external.password }}
