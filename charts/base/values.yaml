@@ -15,6 +15,22 @@ logLevel: info
 edition: k8s-ce
 # -- Use this set to assign a list of default pullSecrets
 imagePullSecrets:
+commonIngress:
+  enabled: true
+  annotations: {}
+  tls:
+    enabled: true
+    secret:
+      secretName: ""
+  hosts:
+    commonHost: api.instill.tech
+  controller: ""
+  modelBackend:
+    serviceName: model-api-gateway-model
+    servicePort: 9080
+  vdpBackend:
+    serviceName: vdp-api-gateway-vdp
+    servicePort: 8080
 expose:
   # -- Set how to expose the api-gateway service. Set the type as "ingress", "clusterIP", "nodePort" or "loadBalancer"
   # and fill the information in the corresponding section
