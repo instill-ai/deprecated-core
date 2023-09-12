@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "base.apiGateway" . }}
+data:
+  .env: |-
+    LOG_LEVEL={{ upper .Values.logLevel }}
+
+    # api-gateway
+    API_GATEWAY_HOST={{ template "base.apiGateway" . }}
+    API_GATEWAY_PORT={{ template "base.apiGateway.httpPort" . }}
+    API_GATEWAY_PROJECT={{ template "base.apiGateway.project" . }}
+    API_GATEWAY_STATS_PORT={{ template "base.apiGateway.statsPort" . }}
+    API_GATEWAY_METRICS_PORT={{ template "base.apiGateway.metricsPort" . }}
+    {{- if .Values.apiGateway.tls.enabled }}
+    API_GATEWAY_CERT_FILE=/etc/instill-ai/base/ssl/api-gateway/tls.crt
+    API_GATEWAY_KEY_FILE=/etc/instill-ai/base/ssl/api-gateway/tls.key
+    {{- end }}
+
+    # mgmt-backend
+    MGMT_BACKEND_HOST={{ template "base.mgmtBackend" . }}
+    MGMT_BACKEND_PUBLICPORT={{ template "base.mgmtBackend.publicPort" . }}
+
+    # mgmt-backend
+    PIPELINE_BACKEND_HOST={{ template "vdp.pipelineBackend" . }}
+    PIPELINE_BACKEND_PUBLICPORT={{ template "vdp.pipelineBackend.publicPort" . }}
+
+    # mgmt-backend
+    CONNECTOR_BACKEND_HOST={{ template "vdp.connectorBackend" . }}
+    CONNECTOR_BACKEND_PUBLICPORT={{ template "vdp.connectorBackend.publicPort" . }}
+
+    # mgmt-backend
+    MODEL_BACKEND_HOST={{ template "model.modelBackend" . }}
+    MODEL_BACKEND_PUBLICPORT={{ template "model.modelBackend.publicPort" . }}
+
+    # influxdb
+    INFLUXDB_HOST={{ template "base.influxdb" . }}
+    INFLUXDB_PORT={{ template "base.influxdb.port" . }}
+
+    # jaeger
+    JAEGER_ENABLED={{ .Values.tags.observability }}
+    JAEGER_HOST={{ template "base.jaeger" . }}
+    JAEGER_PORT={{ template "base.jaeger.port" . }}

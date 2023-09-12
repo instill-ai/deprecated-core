@@ -120,8 +120,8 @@ app.kubernetes.io/name: {{ include "base.name" . }}
   {{- end -}}
 {{- end -}}
 
-{{- define "base.apiGatewayBase" -}}
-  {{- printf "%s-api-gateway-base" (include "base.fullname" .) -}}
+{{- define "base.apiGateway" -}}
+  {{- printf "%s-api-gateway" (include "base.fullname" .) -}}
 {{- end -}}
 
 {{- define "base.mgmtBackend" -}}
@@ -157,23 +157,23 @@ app.kubernetes.io/name: {{ include "base.name" . }}
 {{- end -}}
 
 {{/* api-gateway project */}}
-{{- define "base.apiGatewayBase.project" -}}
+{{- define "base.apiGateway.project" -}}
   {{- printf "base" -}}
 {{- end -}}
 
-{{/* api-gateway-base service and container port */}}
-{{- define "base.apiGatewayBase.httpPort" -}}
-  {{- printf "7080" -}}
+{{/* api-gateway service and container port */}}
+{{- define "base.apiGateway.httpPort" -}}
+  {{- printf "8080" -}}
 {{- end -}}
 
-{{/* api-gateway-base service and container stats port */}}
-{{- define "base.apiGatewayBase.statsPort" -}}
-  {{- printf "7070" -}}
+{{/* api-gateway service and container stats port */}}
+{{- define "base.apiGateway.statsPort" -}}
+  {{- printf "8070" -}}
 {{- end -}}
 
-{{/* api-gateway-base service and container metrics port */}}
-{{- define "base.apiGatewayBase.metricsPort" -}}
-  {{- printf "7071" -}}
+{{/* api-gateway service and container metrics port */}}
+{{- define "base.apiGateway.metricsPort" -}}
+  {{- printf "8071" -}}
 {{- end -}}
 
 {{/* mgmt-backend service and container public port */}}
@@ -269,11 +269,11 @@ app.kubernetes.io/name: {{ include "base.name" . }}
   {{- printf "8095" -}}
 {{- end -}}
 
-{{- define "base.internalTLS.apiGatewayBase.secretName" -}}
+{{- define "base.internalTLS.apiGateway.secretName" -}}
   {{- if eq .Values.internalTLS.certSource "secret" -}}
-    {{- .Values.internalTLS.apiGatewayBase.secretName -}}
+    {{- .Values.internalTLS.apiGateway.secretName -}}
   {{- else -}}
-    {{- printf "%s-api-gateway-base-internal-tls" (include "base.fullname" .) -}}
+    {{- printf "%s-api-gateway-internal-tls" (include "base.fullname" .) -}}
   {{- end -}}
 {{- end -}}
 
@@ -314,4 +314,13 @@ app.kubernetes.io/name: {{ include "base.name" . }}
 {{/* connector service and container public port */}}
 {{- define "vdp.connectorBackend.publicPort" -}}
   {{- print "8082" -}}
+{{- end -}}
+
+{{- define "model.modelBackend" -}}
+  {{- printf "model-model-backend" -}}
+{{- end -}}
+
+{{/* model-backend service and container public port */}}
+{{- define "model.modelBackend.publicPort" -}}
+  {{- printf "8083" -}}
 {{- end -}}

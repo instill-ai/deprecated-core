@@ -41,7 +41,7 @@ expose:
       secretName: ""
   ingress:
     hosts:
-      apiGatewayBase: base.instill.tech
+      apiGateway: base.instill.tech
     # set to the type of ingress controller if it has specific requirements.
     # leave as `default` for most ingress controllers.
     # set to `gce` if using the GCE ingress controller
@@ -54,11 +54,11 @@ expose:
   clusterIP:
     ports:
       # The service port api-gateway http listens on
-      apiGatewayBaseHttp:
+      apiGatewayHttp:
       # The service port api-gateway stats listens on
-      apiGatewayBaseStats:
+      apiGatewayStats:
       # The service port api-gateway metrics listens on
-      apiGatewayBaseMetrics:
+      apiGatewayMetrics:
       # The service port console web listens on
       console:
       # The service port temporal web listens on
@@ -67,17 +67,17 @@ expose:
     annotations: {}
   nodePort:
     ports:
-      apiGatewayBaseHttp:
+      apiGatewayHttp:
         # The service port api-gateway http listens on
         port:
         # The node port api-gateway listens on
         nodePort: 30010
-      apiGatewayBaseStats:
+      apiGatewayStats:
         # The service port api-gateway stats listens
         port:
         # The node port api-gateway stats listens on
         nodePort: 30011
-      apiGatewayBaseMetrics:
+      apiGatewayMetrics:
         # The service port api-gateway metrics listens on
         port:
         # The node port api-gateway metrics listens on
@@ -100,11 +100,11 @@ expose:
     sourceRanges: []
     ports:
       # The service port api-gateway http listens on
-      apiGatewayBaseHttp:
+      apiGatewayHttp:
       # The service port api-gateway stats listens on
-      apiGatewayBaseStats:
+      apiGatewayStats:
       # The service port api-gateway metrics listens on
-      apiGatewayBaseMetrics:
+      apiGatewayMetrics:
       # The service port console web listens on
       console:
       # The service port temporal web listens on
@@ -123,9 +123,7 @@ expose:
 # the IP address of Kubernetes node
 #
 # If Instill Base is deployed behind the proxy, set it as the URL of the proxy (without protocol and port)
-apiGatewayBaseURL: http://localhost:7080
-apiGatewayVDPURL: http://localhost:8080
-apiGatewayModelURL: http://localhost:9080
+apiGatewayURL: http://localhost:8080
 consoleURL: http://localhost:3000
 # -- The internal TLS used for Instill Base services secure communicating. In order to enable https
 # in each components tls cert files need to provided in advance.
@@ -139,13 +137,13 @@ internalTLS:
   certSource: "auto"
   # The content of trust ca, only available when `certSource` is "manual"
   trustCa: ""
-  # api-gateway-base related cert configuration
-  apiGatewayBase:
-    # secret name for api-gateway-base's tls certs, only available when `certSource` is "secret"
+  # api-gateway related cert configuration
+  apiGateway:
+    # secret name for api-gateway's tls certs, only available when `certSource` is "secret"
     secretName: ""
-    # Content of api-gateway-base's TLS cert file, only available when `certSource` is "manual"
+    # Content of api-gateway's TLS cert file, only available when `certSource` is "manual"
     crt: ""
-    # Content of api-gateway-base's TLS key file, only available when `certSource` is "manual"
+    # Content of api-gateway's TLS key file, only available when `certSource` is "manual"
     key: ""
   # mgmt-backend related cert configuration
   mgmtBackend:
@@ -197,15 +195,15 @@ usage:
   tlsenabled: true
   host: usage.instill.tech
   port: 443
-apiGatewayBase:
-  # -- The image of api-gateway-base
+apiGateway:
+  # -- The image of api-gateway
   image:
     repository: instill/api-gateway
     tag: 0.3.2-alpha
     pullPolicy: IfNotPresent
-  # -- The path of configuration file for api-gateway-base
+  # -- The path of configuration file for api-gateway
   configPath: /api-gateway/config/.env
-  # -- The TLS configuration for api-gateway-base
+  # -- The TLS configuration for api-gateway
   tls:
     enabled: false
   # -- Set the service account to be used, default if left empty

@@ -171,7 +171,7 @@ integration-test-latest:			## Run integration test on the latest Instill Base
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=${API_GATEWAY_BASE_HOST} API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_URL=${API_GATEWAY_HOST}:${API_GATEWAY_PORT}' \
 		"
 	@make down
 
@@ -184,7 +184,7 @@ integration-test-release:			## Run integration test on the release Instill Base
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-release \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=${API_GATEWAY_BASE_HOST} API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_URL=${API_GATEWAY_HOST}:${API_GATEWAY_PORT}' \
 		"
 	@make down
 
@@ -193,21 +193,21 @@ helm-integration-test-latest:                       ## Run integration test on t
 	@make build-latest
 	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apiGatewayBase.image.tag=latest \
+		--set apiGateway.image.tag=latest \
 		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
 		--set tags.observability=false
-	@kubectl rollout status deployment base-api-gateway-base --namespace ${HELM_NAMESPACE} --timeout=120s
-	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
 ifeq ($(UNAME_S),Darwin)
-	@docker run -it --rm -p ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=host.docker.internal API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
+	@docker run -it --rm -p ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_URL=host.docker.internal:${API_GATEWAY_PORT}' \
 		"
 else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-latest ${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_URL=localhost:${API_GATEWAY_PORT}' \
 		"
 endif
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace ${HELM_NAMESPACE}
@@ -220,21 +220,21 @@ helm-integration-test-release:                       ## Run integration test on 
 	@make build-release
 	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
-		--set apiGatewayBase.image.tag=${API_GATEWAY_VERSION} \
+		--set apiGateway.image.tag=${API_GATEWAY_VERSION} \
 		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
 		--set tags.observability=false
-	@kubectl rollout status deployment base-api-gateway-base --namespace ${HELM_NAMESPACE} --timeout=120s
-	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
+	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
 ifeq ($(UNAME_S),Darwin)
-	@docker run -it --rm -p ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=host.docker.internal API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
+	@docker run -it --rm -p ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_URL=host.docker.internal:${API_GATEWAY_PORT}' \
 		"
 else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/bash -c " \
-			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_BASE_HOST=localhost API_GATEWAY_BASE_PORT=${API_GATEWAY_BASE_PORT}' \
+			/bin/bash -c 'cd mgmt-backend && make integration-test API_GATEWAY_URL=localhost:${API_GATEWAY_PORT}' \
 		"
 endif
 	@helm uninstall ${HELM_RELEASE_NAME} --namespace ${HELM_NAMESPACE}
@@ -249,7 +249,7 @@ endif
 .PHONY: console-integration-test-latest
 console-integration-test-latest:			## Run console integration test on the latest Instill Base
 	@make build-latest
-	@COMPOSE_PROFILES=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway-base CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway-vdp CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway-model docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+	@COMPOSE_PROFILES=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -279,12 +279,12 @@ console-integration-test-latest:			## Run console integration test on the latest
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://${CONSOLE_HOST}:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://${API_GATEWAY_VDP_HOST}:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://${API_GATEWAY_VDP_HOST}:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_MODEL_HOST}:${API_GATEWAY_MODEL_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_MODEL_HOST}:${API_GATEWAY_MODEL_PORT} \
+		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		--network instill-network \
@@ -296,7 +296,7 @@ console-integration-test-latest:			## Run console integration test on the latest
 .PHONY: console-integration-test-release
 console-integration-test-release:			## Run console integration test on the release Instill Base
 	@make build-release
-	@COMPOSE_PROFILES=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway-base CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway-vdp CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway-model docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+	@COMPOSE_PROFILES=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -326,12 +326,12 @@ console-integration-test-release:			## Run console integration test on the relea
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://${CONSOLE_HOST}:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://${API_GATEWAY_BASE_HOST}:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://${API_GATEWAY_VDP_HOST}:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://${API_GATEWAY_VDP_HOST}:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_MODEL_HOST}:${API_GATEWAY_MODEL_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_MODEL_HOST}:${API_GATEWAY_MODEL_PORT} \
+		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		--network instill-network \
@@ -348,38 +348,34 @@ ifeq ($(UNAME_S),Darwin)
 		--set edition=k8s-ce:test \
 		--set tags.observability=false \
 		--set tags.prometheusStack=false \
-		--set apiGatewayBase.image.tag=latest \
+		--set apiGateway.image.tag=latest \
 		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
-		--set apiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_BASE_PORT} \
-		--set console.serverApiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_BASE_PORT} \
-		--set apiGatewayVDPURL=http://host.docker.internal:${API_GATEWAY_VDP_PORT} \
-		--set console.serverApiGatewayVDPURL=http://host.docker.internal:${API_GATEWAY_VDP_PORT} \
-		--set apiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
-		--set console.serverApiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
+		--set apiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayVDPURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		--set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
 else ifeq ($(UNAME_S),Linux)
 	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
 		--set tags.observability=false \
 		--set tags.prometheusStack=false \
-		--set apiGatewayBase.image.tag=latest \
+		--set apiGateway.image.tag=latest \
 		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
-		--set apiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT} \
-		--set console.serverApiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT} \
-		--set apiGatewayVDPURL=http://localhost:${API_GATEWAY_VDP_PORT} \
-		--set console.serverApiGatewayVDPURL=http://localhost:${API_GATEWAY_VDP_PORT} \
-		--set apiGatewayModelURL=http://localhost:${API_GATEWAY_MODEL_PORT} \
-		--set console.serverApiGatewayModelURL=http://localhost:${API_GATEWAY_MODEL_PORT} \
+		--set apiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayBaseURL=http://localhost:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayVDPURL=http://localhost:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayModelURL=http://localhost:${API_GATEWAY_PORT} \
 		--set consoleURL=http://localhost:${CONSOLE_PORT}
 endif
-	@kubectl rollout status deployment base-api-gateway-base --namespace ${HELM_NAMESPACE} --timeout=120s
-	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@export CONSOLE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
 	@while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v ${HOME}/.kube/config:/root/.kube/config \
@@ -394,17 +390,12 @@ endif
 			/bin/bash -c 'cd /instill-ai/vdp && \
 				helm install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
 					--set edition=k8s-ce:test \
-					--set apiGatewayVDP.image.tag=latest \
 					--set pipelineBackend.image.tag=latest \
 					--set connectorBackend.image.tag=latest \
 					--set connectorBackend.excludelocalconnector=false \
 					--set controllerVDP.image.tag=latest' \
 			/bin/bash -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
-	@kubectl rollout status deployment vdp-api-gateway-vdp --namespace ${HELM_NAMESPACE} --timeout=120s
-	@export API_GATEWAY_VDP_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-vdp,app.kubernetes.io/instance=vdp" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_VDP_POD_NAME} ${API_GATEWAY_VDP_PORT}:${API_GATEWAY_VDP_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_VDP_PORT} > /dev/null 2>&1; do sleep 1; done
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v ${HOME}/.kube/config:/root/.kube/config \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -418,25 +409,20 @@ endif
 			/bin/bash -c 'cd /instill-ai/model && \
 				helm install model charts/model --namespace ${HELM_NAMESPACE} --create-namespace \
 						--set edition=k8s-ce:test \
-						--set apiGatewayModel.image.tag=latest \
 						--set modelBackend.image.tag=latest \
 						--set controllerModel.image.tag=latest \
 						--set itMode.enabled=true' \
 			/bin/bash -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
-	@kubectl rollout status deployment model-api-gateway-model --namespace ${HELM_NAMESPACE} --timeout=1500s
-	@export API_GATEWAY_MODEL_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-model,app.kubernetes.io/instance=model" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_MODEL_POD_NAME} ${API_GATEWAY_MODEL_PORT}:${API_GATEWAY_MODEL_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_MODEL_PORT} > /dev/null 2>&1; do sleep 1; done
 ifeq ($(UNAME_S),Darwin)
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
+		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -447,12 +433,12 @@ ifeq ($(UNAME_S),Darwin)
 else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_MODEL_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_MODEL_PORT} \
+		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -477,38 +463,34 @@ ifeq ($(UNAME_S),Darwin)
 		--set edition=k8s-ce:test \
 		--set tags.observability=false \
 		--set tags.prometheusStack=false \
-		--set apiGatewayBase.image.tag=${API_GATEWAY_VERSION} \
+		--set apiGateway.image.tag=${API_GATEWAY_VERSION} \
 		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
-		--set apiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_BASE_PORT} \
-		--set console.serverApiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_BASE_PORT} \
-		--set apiGatewayVDPURL=http://host.docker.internal:${API_GATEWAY_VDP_PORT} \
-		--set console.serverApiGatewayVDPURL=http://host.docker.internal:${API_GATEWAY_VDP_PORT} \
-		--set apiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
-		--set console.serverApiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
+		--set apiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayVDPURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		--set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
 else ifeq ($(UNAME_S),Linux)
 	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
 		--set tags.observability=false \
 		--set tags.prometheusStack=false \
-		--set apiGatewayBase.image.tag=${API_GATEWAY_VERSION} \
+		--set apiGateway.image.tag=${API_GATEWAY_VERSION} \
 		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
-		--set apiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT} \
-		--set console.serverApiGatewayBaseURL=http://localhost:${API_GATEWAY_BASE_PORT} \
-		--set apiGatewayVDPURL=http://localhost:${API_GATEWAY_VDP_PORT} \
-		--set console.serverApiGatewayVDPURL=http://localhost:${API_GATEWAY_VDP_PORT} \
-		--set apiGatewayModelURL=http://localhost:${API_GATEWAY_MODEL_PORT} \
-		--set console.serverApiGatewayModelURL=http://localhost:${API_GATEWAY_MODEL_PORT} \
+		--set apiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayBaseURL=http://localhost:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayVDPURL=http://localhost:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayModelURL=http://localhost:${API_GATEWAY_PORT} \
 		--set consoleURL=http://localhost:${CONSOLE_PORT}
 endif
-	@kubectl rollout status deployment base-api-gateway-base --namespace ${HELM_NAMESPACE} --timeout=120s
-	@export API_GATEWAY_BASE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-base,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_BASE_POD_NAME} ${API_GATEWAY_BASE_PORT}:${API_GATEWAY_BASE_PORT} > /dev/null 2>&1 &
+	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
+		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@export CONSOLE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_BASE_PORT} > /dev/null 2>&1; do sleep 1; done
+	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
 	@while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v ${HOME}/.kube/config:/root/.kube/config \
@@ -523,17 +505,12 @@ endif
 			/bin/bash -c 'cd /instill-ai/vdp && \
 				helm install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
 					--set edition=k8s-ce:test \
-					--set apiGatewayVDP.image.tag=latest \
 					--set pipelineBackend.image.tag=latest \
 					--set connectorBackend.image.tag=latest \
 					--set connectorBackend.excludelocalconnector=false \
 					--set controllerVDP.image.tag=latest' \
 			/bin/bash -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
-	@kubectl rollout status deployment vdp-api-gateway-vdp --namespace ${HELM_NAMESPACE} --timeout=120s
-	@export API_GATEWAY_VDP_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-vdp,app.kubernetes.io/instance=vdp" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_VDP_POD_NAME} ${API_GATEWAY_VDP_PORT}:${API_GATEWAY_VDP_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_VDP_PORT} > /dev/null 2>&1; do sleep 1; done
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v ${HOME}/.kube/config:/root/.kube/config \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -547,25 +524,20 @@ endif
 			/bin/bash -c 'cd /instill-ai/model && \
 				helm install model charts/model --namespace ${HELM_NAMESPACE} --create-namespace \
 						--set edition=k8s-ce:test \
-						--set apiGatewayModel.image.tag=latest \
 						--set modelBackend.image.tag=latest \
 						--set controllerModel.image.tag=latest \
 						--set itMode.enabled=true' \
 			/bin/bash -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
-	@kubectl rollout status deployment model-api-gateway-model --namespace ${HELM_NAMESPACE} --timeout=1500s
-	@export API_GATEWAY_MODEL_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway-model,app.kubernetes.io/instance=model" -o jsonpath="{.items[0].metadata.name}") && \
-		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_MODEL_POD_NAME} ${API_GATEWAY_MODEL_PORT}:${API_GATEWAY_MODEL_PORT} > /dev/null 2>&1 &
-	@while ! nc -vz localhost ${API_GATEWAY_MODEL_PORT} > /dev/null 2>&1; do sleep 1; done
 ifeq ($(UNAME_S),Darwin)
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_MODEL_PORT} \
+		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -576,12 +548,12 @@ ifeq ($(UNAME_S),Darwin)
 else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_BASE_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_VDP_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_MODEL_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_MODEL_PORT} \
+		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \

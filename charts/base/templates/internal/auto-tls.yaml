@@ -1,6 +1,6 @@
 {{- if and .Values.internalTLS.enabled (eq .Values.internalTLS.certSource "auto") }}
 {{- $ca := genCA "base-internal-ca" 365 }}
-{{- $agCN := (include "base.apiGatewayBase" .) }}
+{{- $agCN := (include "base.apiGateway" .) }}
 {{- $agCrt := genSignedCert $agCN (list "127.0.0.1") (list "localhost" $agCN) 365 $ca }}
 {{- $mgmtCN := (include "base.mgmtBackend" .) }}
 {{- $mgmtCrt := genSignedCert $mgmtCN (list "127.0.0.1") (list "localhost" $mgmtCN) 365 $ca }}
@@ -9,7 +9,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: "{{ template "base.internalTLS.apiGatewayBase.secretName" . }}"
+  name: "{{ template "base.internalTLS.apiGateway.secretName" . }}"
   labels:
     {{- include "base.labels" . | nindent 4 }}
 type: kubernetes.io/tls
