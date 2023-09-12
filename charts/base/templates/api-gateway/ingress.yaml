@@ -22,10 +22,10 @@ apiVersion: networking.k8s.io/v1
 {{- end }}
 kind: Ingress
 metadata:
-  name: "{{ template "base.apiGatewayBase" . }}"
+  name: "{{ template "base.apiGateway" . }}"
   labels:
     {{- include "base.labels" . | nindent 4 }}
-    app.kubernetes.io/component: api-gateway-base
+    app.kubernetes.io/component: api-gateway
   annotations:
     rollme: {{ randAlphaNum 5 | quote }}
     {{- with $ingress.annotations }}
@@ -38,9 +38,9 @@ spec:
   {{- if $tls.enabled }}
   tls:
   - secretName: {{ $tls.secret.secretName }}
-    {{- if $ingress.hosts.apiGatewayBase }}
+    {{- if $ingress.hosts.apiGateway }}
     hosts:
-    - {{ $ingress.hosts.apiGatewayBase }}
+    - {{ $ingress.hosts.apiGateway }}
     {{- end }}
   {{- end }}
   rules:
@@ -49,18 +49,18 @@ spec:
 {{- if semverCompare "<1.19-0" (include "base.ingress.kubeVersion" .) }}
       - path: {{ .rootPath }}
         backend:
-          serviceName: {{ template "base.apiGatewayBase" . }}
-          servicePort: {{ template "base.apiGatewayBase.httpPort" . }}
+          serviceName: {{ template "base.apiGateway" . }}
+          servicePort: {{ template "base.apiGateway.httpPort" . }}
 {{- else }}
       - path: {{ .rootPath }}
         pathType: ImplementationSpecific
         backend:
           service:
-            name: {{ template "base.apiGatewayBase" . }}
+            name: {{ template "base.apiGateway" . }}
             port:
-              number: {{ template "base.apiGatewayBase.httpPort" . }}
+              number: {{ template "base.apiGateway.httpPort" . }}
 {{- end }}
-    {{- if $ingress.hosts.apiGatewayBase }}
-    host: {{ $ingress.hosts.apiGatewayBase }}
+    {{- if $ingress.hosts.apiGateway }}
+    host: {{ $ingress.hosts.apiGateway }}
     {{- end }}
 {{- end }}

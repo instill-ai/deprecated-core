@@ -1,16 +1,14 @@
 version: "3.9"
 
 services:
-  api_gateway_base:
+  api_gateway:
     profiles:
       - all
       - mgmt
       - console
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${API_GATEWAY_IMAGE}:latest
@@ -20,13 +18,11 @@ services:
   mgmt_backend_migrate:
     profiles:
       - all
-      - api-gateway-base
+      - api-gateway
       - console
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${MGMT_BACKEND_IMAGE}:latest
@@ -34,13 +30,11 @@ services:
   mgmt_backend_init:
     profiles:
       - all
-      - api-gateway-base
+      - api-gateway
       - console
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${MGMT_BACKEND_IMAGE}:latest
@@ -48,13 +42,11 @@ services:
   mgmt_backend:
     profiles:
       - all
-      - api-gateway-base
+      - api-gateway
       - console
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${MGMT_BACKEND_IMAGE}:latest
@@ -68,13 +60,11 @@ services:
   console:
     profiles:
       - all
-      - api-gateway-base
+      - api-gateway
       - mgmt
-      - api-gateway-vdp
       - pipeline
       - connector
       - controller-vdp
-      - api-gateway-model
       - model
       - controller-model
     image: ${CONSOLE_IMAGE}:latest
