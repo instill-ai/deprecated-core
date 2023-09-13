@@ -249,7 +249,7 @@ endif
 .PHONY: console-integration-test-latest
 console-integration-test-latest:			## Run console integration test on the latest Instill Base
 	@make build-latest
-	@COMPOSE_PROFILES=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+	@COMPOSE_PROFILES=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -279,12 +279,8 @@ console-integration-test-latest:			## Run console integration test on the latest
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://${CONSOLE_HOST}:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		--network instill-network \
@@ -296,7 +292,7 @@ console-integration-test-latest:			## Run console integration test on the latest
 .PHONY: console-integration-test-release
 console-integration-test-release:			## Run console integration test on the release Instill Base
 	@make build-release
-	@COMPOSE_PROFILES=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_BASE_HOST=api-gateway CONSOLE_PUBLIC_API_GATEWAY_VDP_HOST=api-gateway CONSOLE_PUBLIC_API_GATEWAY_MODEL_HOST=api-gateway docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+	@COMPOSE_PROFILES=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
 	@COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run -it --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -326,12 +322,8 @@ console-integration-test-release:			## Run console integration test on the relea
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://${CONSOLE_HOST}:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		--network instill-network \
@@ -352,9 +344,7 @@ ifeq ($(UNAME_S),Darwin)
 		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
 		--set apiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayVDPURL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		--set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
 else ifeq ($(UNAME_S),Linux)
 	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
@@ -365,9 +355,7 @@ else ifeq ($(UNAME_S),Linux)
 		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
 		--set apiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayBaseURL=http://localhost:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayVDPURL=http://localhost:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayModelURL=http://localhost:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
 		--set consoleURL=http://localhost:${CONSOLE_PORT}
 endif
 	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
@@ -417,12 +405,8 @@ endif
 ifeq ($(UNAME_S),Darwin)
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -433,12 +417,8 @@ ifeq ($(UNAME_S),Darwin)
 else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -467,9 +447,7 @@ ifeq ($(UNAME_S),Darwin)
 		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
 		--set apiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayBaseURL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayVDPURL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayModelURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		--set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
 else ifeq ($(UNAME_S),Linux)
 	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
@@ -480,9 +458,7 @@ else ifeq ($(UNAME_S),Linux)
 		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
 		--set apiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayBaseURL=http://localhost:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayVDPURL=http://localhost:${API_GATEWAY_PORT} \
-		--set console.serverApiGatewayModelURL=http://localhost:${API_GATEWAY_PORT} \
+		--set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
 		--set consoleURL=http://localhost:${CONSOLE_PORT}
 endif
 	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
@@ -532,12 +508,8 @@ endif
 ifeq ($(UNAME_S),Darwin)
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
@@ -548,12 +520,8 @@ ifeq ($(UNAME_S),Darwin)
 else ifeq ($(UNAME_S),Linux)
 	@docker run -it --rm \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
-		-e NEXT_PUBLIC_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_BASE_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_VDP_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_SERVER_MODEL_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+		-e NEXT_SERVER_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
 		-e NEXT_PUBLIC_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
