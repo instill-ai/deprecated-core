@@ -92,18 +92,10 @@ spec:
               value: "{{ .Values.edition }}"
             - name: NEXT_PUBLIC_CONSOLE_BASE_URL
               value: "{{ .Values.consoleURL }}"
-            - name: NEXT_PUBLIC_BASE_API_GATEWAY_URL
-              value: "{{ .Values.apiGatewayBaseURL }}"
-            - name: NEXT_SERVER_BASE_API_GATEWAY_URL
-              value: {{ default (printf "http://%s:%s" (include "base.apiGateway" .) (include "base.apiGateway.httpPort" . )) .Values.console.serverApiGatewayBaseURL }}
-            - name: NEXT_PUBLIC_VDP_API_GATEWAY_URL
-              value: "{{ .Values.apiGatewayBaseURL }}"
-            - name: NEXT_SERVER_VDP_API_GATEWAY_URL
-              value: {{ default (printf "http://%s:%s" (include "base.apiGateway" .) (include "base.apiGateway.httpPort" . )) .Values.console.serverApiGatewayBaseURL }}
-            - name: NEXT_PUBLIC_MODEL_API_GATEWAY_URL
-              value: "{{ .Values.apiGatewayBaseURL }}"
-            - name: NEXT_SERVER_MODEL_API_GATEWAY_URL
-              value: {{ default (printf "http://%s:%s" (include "base.apiGateway" .) (include "base.apiGateway.httpPort" . )) .Values.console.serverApiGatewayBaseURL }}
+            - name: NEXT_PUBLIC_API_GATEWAY_URL
+              value: "{{ .Values.apiGatewayURL }}"
+            - name: NEXT_SERVER_API_GATEWAY_URL
+              value: {{ default (printf "http://%s:%s" (include "base.apiGateway" .) (include "base.apiGateway.httpPort" . )) .Values.console.serverApiGatewayURL }}
             - name: NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME
               value: "instill-ai-user"
             - name: NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION

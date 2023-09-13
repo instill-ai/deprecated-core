@@ -320,12 +320,8 @@ console:
     repository: instill/console
     tag: 0.27.0-alpha
     pullPolicy: IfNotPresent
-  # -- The accessible endpoint for the api-gateway-base from the console server side
-  serverApiGatewayBaseURL:
-  # -- The accessible endpoint for the api-gateway-vdp from the console server side
-  serverApiGatewayVDPURL:
-  # -- The accessible endpoint for the api-gateway-model from the console server side
-  serverApiGatewayModelURL:
+  # -- The accessible endpoint for the api-gateway from the console server side
+  serverApiGatewayURL:
   # -- Set the service account to be used, default if left empty
   serviceAccountName: ""
   # -- Mount the service account token
