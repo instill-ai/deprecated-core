@@ -901,7 +901,7 @@ prometheus:
       static_configs:
         - targets:
             - "http://base-opentelemetry-collector:9001"
-            - "http://base-api-gateway-base:9000"
+            - "http://base-api-gateway:8071"
 grafana:
   adminPassword: password
   dashboards:

@@ -4,4 +4,4 @@ global:
 scrape_configs:
 - job_name: 'collector'
   static_configs:
-  - targets: ['otel-collector:9001', 'api-gateway:9000']
+  - targets: ['otel-collector:9001', 'api-gateway:8071']
