@@ -1,7 +1,11 @@
-name: Make latest
+name: Make Latest
 
 on:
   workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   make-latest:
@@ -37,14 +41,7 @@ jobs:
 
       - name: Launch Instill Base (latest)
         run: |
-          echo ${DEFAULT_USER_UID}
-          COMPOSE_PROFILES=all \
-          DEFAULT_USER_UID=${DEFAULT_USER_UID} \
-          EDITION=local-ce:latest \
-          docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
-          COMPOSE_PROFILES=all \
-          EDITION=local-ce:latest \
-          docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
+          make latest PROFILE=all EDITION=local-ce:test
 
       - name: List all docker containers
         run: |
@@ -61,3 +58,7 @@ jobs:
       - name: Curl to base services healthcheck endpoint
         run: |
           curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:8080/base/v1alpha/health/mgmt
+
+      - name: Tear down Instill Base (latest)
+        run: |
+          make down
