@@ -29,15 +29,15 @@ HELM_RELEASE_NAME := base
 all:			## Launch all services with their up-to-date release version
 	@make build-release
 	@[ ! -f "$(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid" ] && mkdir -p $(shell eval echo ${SYSTEM_CONFIG_PATH}) && docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid || true
-	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$(cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
-	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$(cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} rm -f
+	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
+	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} rm -f
 
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
 	@make build-latest
 	@[ ! -f "$(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid" ] && mkdir -p $(shell eval echo ${SYSTEM_CONFIG_PATH}) && docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid || true
-	@COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$(cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
-	@COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$(cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml rm -f
+	@COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
+	@COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml rm -f
 
 .PHONY: logs
 logs:			## Tail all logs with -n 10
