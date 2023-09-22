@@ -242,7 +242,7 @@ apiGateway:
     minReplicas:
     maxReplicas:
     targetCPUUtilizationPercentage:
-    targetMemoryUtilizationPercentage:
+    targetAverageMemoryUtilization:
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -306,7 +306,7 @@ mgmtBackend:
     minReplicas:
     maxReplicas:
     targetCPUUtilizationPercentage:
-    targetMemoryUtilizationPercentage:
+    targetAverageMemoryUtilization:
   podDisruptionBudget:
     enabled: false
     spec:
@@ -358,7 +358,7 @@ console:
     minReplicas:
     maxReplicas:
     targetCPUUtilizationPercentage:
-    targetMemoryUtilizationPercentage:
+    targetAverageMemoryUtilization:
   nodeSelector: {}
   tolerations: []
   affinity: {}
