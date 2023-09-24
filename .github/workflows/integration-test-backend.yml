@@ -11,7 +11,7 @@ on:
         type: string
 
 jobs:
-  integration-test-latest:
+  integration-test-latest-linux:
     if: inputs.target == 'latest'
     runs-on: ubuntu-latest
     steps:
@@ -58,7 +58,52 @@ jobs:
           cd ${{ inputs.component }}
           make integration-test API_GATEWAY_URL=localhost:${API_GATEWAY_PORT}
 
-  integration-test-release:
+  integration-test-latest-mac:
+    if: inputs.target == 'latest'      
+    runs-on: [self-hosted,macOS,base]
+    steps:
+      - name: Set up environment
+        run: |
+          brew install make
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Load .env file
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Install k6
+        run: |
+          brew install k6
+
+      - name: Make down base
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+
+      - name: Launch Instill Base (latest)
+        run: |
+          COMPOSE_PROFILES=all \
+          EDITION=local-ce:test \
+          docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
+          COMPOSE_PROFILES=all \
+          EDITION=local-ce:test \
+          docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f
+
+      - name: Run ${{ inputs.component }} integration test (latest)
+        run: |
+          git clone https://github.com/instill-ai/${{ inputs.component }}.git
+          cd ${{ inputs.component }}
+          make integration-test API_GATEWAY_URL=localhost:${API_GATEWAY_PORT}
+
+      - name: Make down base
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+
+  integration-test-release-linux:
     if: inputs.target == 'release'
     runs-on: ubuntu-latest
     steps:
@@ -109,3 +154,53 @@ jobs:
           git clone -b v$COMPONENT_VERSION https://github.com/instill-ai/${{ inputs.component }}.git
           cd ${{ inputs.component }}
           make integration-test API_GATEWAY_URL=localhost:${API_GATEWAY_PORT}
+
+  integration-test-release-mac:
+    if: inputs.target == 'release'
+    runs-on: [self-hosted,macOS,base]
+    steps:
+      - name: Set up environment
+        run: |
+          brew install make
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Load .env file
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Install k6
+        run: |
+          brew install k6
+
+      - name: Make down base
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+
+      - name: Uppercase component name
+        id: uppercase
+        run: |
+          echo "COMPONENT_NAME=$(echo ${{ inputs.component }} | tr 'a-z-' 'A-Z_')" >> $GITHUB_OUTPUT
+
+      - name: Launch Instill Base (release)
+        run: |
+          EDITION=local-ce:test \
+          docker compose up -d --quiet-pull
+          EDITION=local-ce:test \
+          docker compose rm -f
+
+      - name: Run ${{ inputs.component }} integration test (release)
+        env:
+          COMPONENT_VERSION: ${{ env[format('{0}_VERSION', steps.uppercase.outputs.COMPONENT_NAME)] }}
+        run: |
+          git clone -b v$COMPONENT_VERSION https://github.com/instill-ai/${{ inputs.component }}.git
+          cd ${{ inputs.component }}
+          make integration-test API_GATEWAY_URL=localhost:${API_GATEWAY_PORT}
+
+      - name: Make down base
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v

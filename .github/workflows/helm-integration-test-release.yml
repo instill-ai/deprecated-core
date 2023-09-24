@@ -14,7 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         component: [mgmt-backend]
-    uses: instill-ai/base/.github/workflows/helm-integration-test-backend.yml@main
+    uses: instill-ai/base/.github/workflows/helm-integration-test-backend.yml@sarthakgupta/ins-1586-create-integration-tests-cicd-for-mac-in-base-model-and-vdp
     with:
       component: ${{ matrix.component }}
       target: release
+  console:
+    uses: instill-ai/base/.github/workflows/helm-integration-test-console.yml@sarthakgupta/ins-1586-create-integration-tests-cicd-for-mac-in-base-model-and-vdp
+    with:
+      target: release    
