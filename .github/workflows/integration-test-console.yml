@@ -113,6 +113,34 @@ jobs:
         run: |
           brew install make
 
+      - name: Checkout repo (model)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/model
+
+      - name: Make down model
+        run: |
+          docker rm -f model-build-latest >/dev/null 2>&1
+          docker rm -f model-backend-integration-test-latest >/dev/null 2>&1
+          docker rm -f model-backend-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f model-dind-latest >/dev/null 2>&1
+          EDITION=NULL docker compose down -v
+          sleep 60
+
+      - name: Checkout repo (vdp)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/vdp
+
+      - name: Make down vdp
+        run: |
+          docker rm -f vdp-build-latest >/dev/null 2>&1
+          docker rm -f vdp-backend-integration-test-latest >/dev/null 2>&1
+          docker rm -f vdp-backend-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f vdp-dind-latest >/dev/null 2>&1
+          EDITION=NULL docker compose down -v
+          sleep 60
+
       - name: Checkout repo (base)
         uses: actions/checkout@v3
         with:
@@ -125,7 +153,14 @@ jobs:
 
       - name: Make down base
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v    
+          docker rm -f base-build-latest >/dev/null 2>&1
+          docker rm -f base-backend-integration-test-latest >/dev/null 2>&1
+          docker rm -f base-console-integration-test-latest >/dev/null 2>&1
+          docker rm -f base-backend-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f base-console-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f base-dind-latest >/dev/null 2>&1
+          EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+          sleep 60
 
       - name: Launch Instill Base (latest)
         run: |
@@ -147,10 +182,6 @@ jobs:
         with:
           envFile: .env
 
-      - name: Make down vdp
-        run: |
-          EDITION=NULL docker compose down -v
-
       - name: Launch Instill VDP (latest)
         run: |
           COMPOSE_PROFILES=all \
@@ -170,12 +201,9 @@ jobs:
         with:
           envFile: .env
 
-      - name: Make down model
-        run: |
-          EDITION=NULL docker compose down -v
-
       - name: Launch Instill Model (latest)
         run: |
+          make build-latest
           ITMODE_ENABLED=true \
           TRITON_CONDA_ENV_PLATFORM=cpu \
           COMPOSE_PROFILES=all \
@@ -211,6 +239,10 @@ jobs:
 
       - name: Make down vdp
         run: |
+          docker rm -f vdp-build-latest >/dev/null 2>&1
+          docker rm -f vdp-backend-integration-test-latest >/dev/null 2>&1
+          docker rm -f vdp-backend-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f vdp-dind-latest >/dev/null 2>&1
           EDITION=NULL docker compose down -v
 
       - name: Checkout repo (model)
@@ -220,6 +252,10 @@ jobs:
 
       - name: Make down model
         run: |
+          docker rm -f model-build-latest >/dev/null 2>&1
+          docker rm -f model-backend-integration-test-latest >/dev/null 2>&1
+          docker rm -f model-backend-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f model-dind-latest >/dev/null 2>&1
           EDITION=NULL docker compose down -v
 
       - name: Checkout repo (base)
@@ -229,7 +265,14 @@ jobs:
 
       - name: Make down base
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+          docker rm -f base-build-latest >/dev/null 2>&1
+          docker rm -f base-backend-integration-test-latest >/dev/null 2>&1
+          docker rm -f base-console-integration-test-latest >/dev/null 2>&1
+          docker rm -f base-backend-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f base-console-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f base-dind-latest >/dev/null 2>&1
+          EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+          sleep 60
 
   integration-test-release-linux:
     if: inputs.target == 'release'
@@ -247,7 +290,7 @@ jobs:
           sudo apt clean
           docker rmi $(docker image ls --all --quiet)
           rm --recursive --force "$AGENT_TOOLSDIRECTORY"
-          df --human-readable
+          df --human-readable   
 
       - name: Checkout repo (base)
         uses: actions/checkout@v3
@@ -298,6 +341,7 @@ jobs:
 
       - name: Launch Instill Model (release)
         run: |
+          make build-latest
           ITMODE_ENABLED=true \
           TRITON_CONDA_ENV_PLATFORM=cpu \
           COMPOSE_PROFILES=all \
@@ -334,6 +378,34 @@ jobs:
         run: |
           brew install make
 
+      - name: Checkout repo (model)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/model
+
+      - name: Make down model
+        run: |
+          docker rm -f model-build-release >/dev/null 2>&1
+          docker rm -f model-backend-integration-test-release >/dev/null 2>&1
+          docker rm -f model-backend-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f model-dind-release >/dev/null 2>&1
+          EDITION=NULL docker compose down -v
+          sleep 60
+
+      - name: Checkout repo (vdp)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/vdp
+
+      - name: Make down vdp
+        run: |
+          docker rm -f vdp-build-release >/dev/null 2>&1
+          docker rm -f vdp-backend-integration-test-release >/dev/null 2>&1
+          docker rm -f vdp-backend-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f vdp-dind-release >/dev/null 2>&1
+          EDITION=NULL docker compose down -v
+          sleep 60
+
       - name: Checkout repo (base)
         uses: actions/checkout@v3
         with:
@@ -346,7 +418,14 @@ jobs:
 
       - name: Make down base
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+          docker rm -f base-build-release >/dev/null 2>&1
+          docker rm -f base-backend-integration-test-release >/dev/null 2>&1
+          docker rm -f base-console-integration-test-release >/dev/null 2>&1
+          docker rm -f base-backend-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f base-console-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f base-dind-release >/dev/null 2>&1
+          EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+          sleep 60
 
       - name: Launch Instill Base (release)
         run: |
@@ -365,10 +444,6 @@ jobs:
         uses: cardinalby/export-env-action@v2
         with:
           envFile: .env
-
-      - name: Make down vdp
-        run: |
-          EDITION=NULL docker compose down -v
 
       - name: Launch Instill VDP (release)
         run: |
@@ -389,12 +464,9 @@ jobs:
         with:
           envFile: .env
 
-      - name: Make down model
-        run: |
-          EDITION=NULL docker compose down -v
-
       - name: Launch Instill Model (release)
         run: |
+          make build-latest
           ITMODE_ENABLED=true \
           TRITON_CONDA_ENV_PLATFORM=cpu \
           COMPOSE_PROFILES=all \
@@ -430,6 +502,10 @@ jobs:
 
       - name: Make down vdp
         run: |
+          docker rm -f vdp-build-release >/dev/null 2>&1
+          docker rm -f vdp-backend-integration-test-release >/dev/null 2>&1
+          docker rm -f vdp-backend-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f vdp-dind-release >/dev/null 2>&1
           EDITION=NULL docker compose down -v
 
       - name: Checkout repo (model)
@@ -439,6 +515,10 @@ jobs:
 
       - name: Make down model
         run: |
+          docker rm -f model-build-release >/dev/null 2>&1
+          docker rm -f model-backend-integration-test-release >/dev/null 2>&1
+          docker rm -f model-backend-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f model-dind-release >/dev/null 2>&1
           EDITION=NULL docker compose down -v
 
       - name: Checkout repo (base)
@@ -448,4 +528,11 @@ jobs:
 
       - name: Make down base
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+          docker rm -f base-build-release >/dev/null 2>&1
+          docker rm -f base-backend-integration-test-release >/dev/null 2>&1
+          docker rm -f base-console-integration-test-release >/dev/null 2>&1
+          docker rm -f base-backend-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f base-console-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f base-dind-release >/dev/null 2>&1
+          EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+          sleep 60

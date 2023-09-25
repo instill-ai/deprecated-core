@@ -11,11 +11,11 @@ jobs:
       fail-fast: false
       matrix:
         component: [mgmt-backend]
-    uses: instill-ai/base/.github/workflows/integration-test-backend.yml@sarthakgupta/ins-1586-create-integration-tests-cicd-for-mac-in-base-model-and-vdp
+    uses: instill-ai/base/.github/workflows/integration-test-backend.yml@main
     with:
       component: ${{ matrix.component }}
       target: latest
   console:
-    uses: instill-ai/base/.github/workflows/integration-test-console.yml@sarthakgupta/ins-1586-create-integration-tests-cicd-for-mac-in-base-model-and-vdp
+    uses: instill-ai/base/.github/workflows/integration-test-console.yml@main
     with:
       target: latest
