@@ -15,7 +15,7 @@
 Execute the following commands to start pre-built images with all the dependencies:
 
 ```bash
-$ git clone https://github.com/instill-ai/model.git && cd model
+$ git clone https://github.com/instill-ai/base.git && cd base
 
 # Launch all services
 $ make all
