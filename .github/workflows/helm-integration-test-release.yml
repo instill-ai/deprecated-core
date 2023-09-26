@@ -18,3 +18,7 @@ jobs:
     with:
       component: ${{ matrix.component }}
       target: release
+  console:
+    uses: instill-ai/base/.github/workflows/helm-integration-test-console.yml@main
+    with:
+      target: release    

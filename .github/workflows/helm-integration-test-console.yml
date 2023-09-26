@@ -1,0 +1,623 @@
+name: Helm Integration Test Reusable (console)
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+
+jobs:
+  helm-integration-test-latest-linux:
+    if: inputs.target == 'latest'
+    runs-on: ubuntu-latest
+    steps:
+      # mono occupies port 8084 which conflicts with mgmt-backend
+      - name: Stop mono service
+        run: |
+          sudo kill -9 `sudo lsof -t -i:8084`
+          sudo lsof -i -P -n | grep LISTEN
+
+      - name: Free disk space
+        run: |
+          df --human-readable
+          sudo apt clean
+          docker rmi $(docker image ls --all --quiet)
+          rm --recursive --force "$AGENT_TOOLSDIRECTORY"
+          df --human-readable
+
+      - name: Start Minikube
+        run: minikube start --cpus 2 --memory 6096    
+
+      - name: Checkout repo (base)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Load .env file (base)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Install k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin    
+
+      - name: Launch Instill Base (latest)
+        run: |
+          helm install base charts/base --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set tags.observability=false \
+            --set tags.prometheusStack=false \
+            --set apiGateway.image.tag=latest \
+            --set mgmtBackend.image.tag=latest \
+            --set console.image.tag=latest \
+            --set apiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
+            --set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
+            --set consoleURL=http://localhost:${CONSOLE_PORT}
+
+      - name: Wait for base pods up
+        run: |
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+            echo "$(kubectl get pods --namespace instill-ai)"
+            sleep 10
+          done
+
+      - name: Port-forward of base api-gateway and console
+        run: |
+          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
+          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
+          while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+          while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
+
+      - name: Checkout repo (vdp)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/vdp
+
+      - name: Load .env file (vdp)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Launch Instill VDP (latest)
+        run: |
+          helm install vdp charts/vdp --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set pipelineBackend.image.tag=latest \
+            --set connectorBackend.image.tag=latest \
+            --set connectorBackend.excludelocalconnector=false \
+            --set controllerVDP.image.tag=latest
+
+      - name: Checkout repo (model)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/model
+
+      - name: Load .env file (model)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Launch Instill Model (latest)
+        run: |
+          helm install model charts/model --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set modelBackend.image.tag=latest \
+            --set controllerModel.image.tag=latest \
+            --set itMode.enabled=true
+
+      - name: Run console integration test (latest)
+        run: |
+          git clone https://github.com/instill-ai/console.git
+          cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:latest .
+          docker run -t --rm \
+            -e NEXT_PUBLIC_API_VERSION=v1alpha \
+            -e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
+            -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
+            -e NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+            -e NEXT_SERVER_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+            -e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
+            -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
+            --network host \
+            --entrypoint ./entrypoint-playwright.sh \
+            --name base-console-integration-test-latest \
+            console-playwright:latest
+
+  helm-integration-test-latest-mac:
+    if: inputs.target == 'latest'
+    runs-on: [self-hosted,macOS,base]
+    steps:
+      - name: Set up environment
+        run: |
+          brew install make
+
+      - name: Checkout repo (model)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/model
+
+      - name: Load .env file
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Check if Model Helm release exists
+        id: check-model-helm-release
+        run: |
+          if helm ls -n instill-ai | grep -q 'model'; then
+            echo "Helm release 'model' found."
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Helm release 'model' not found."
+          fi
+
+      - name: Uninstall Model Helm Release
+        if: steps.check-model-helm-release.outputs.release_exists == 'true'
+        run: |
+          helm uninstall model --namespace instill-ai
+
+      - name: Checkout repo (vdp)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/vdp
+
+      - name: Load .env file (vdp)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Check if VDP Helm release exists
+        id: check-vdp-helm-release
+        run: |
+          if helm ls -n instill-ai | grep -q 'vdp'; then
+            echo "Helm release 'vdp' found."
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Helm release 'vdp' not found."
+          fi
+
+      - name: Uninstall VDP Helm Release
+        if: steps.check-vdp-helm-release.outputs.release_exists == 'true'
+        run: |
+          helm uninstall vdp --namespace instill-ai
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Load .env file
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Check if Base Helm release exists
+        id: check-base-helm-release
+        run: |
+          if helm ls -n instill-ai | grep -q 'base'; then
+            echo "Helm release 'base' found."
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Helm release 'base' not found."
+          fi
+
+      - name: Uninstall Base Helm Release
+        if: steps.check-base-helm-release.outputs.release_exists == 'true'
+        run: |
+          helm uninstall base --namespace instill-ai
+          kubectl delete namespace instill-ai
+          EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+
+      - name: Install k6
+        run: |
+          brew install k6 
+
+      - name: Launch Instill Base (latest)
+        run: |
+          make build-latest
+          helm install base charts/base --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set tags.observability=false \
+            --set tags.prometheusStack=false \
+            --set apiGateway.image.tag=latest \
+            --set mgmtBackend.image.tag=latest \
+            --set console.image.tag=latest \
+            --set apiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+            --set console.serverApiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+            --set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
+
+      - name: Wait for base pods up
+        run: |
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+            echo "$(kubectl get pods --namespace instill-ai)"
+            sleep 10
+          done
+
+      - name: Port-forward of base api-gateway and console
+        run: |
+          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
+          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
+          while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+          while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done      
+
+      - name: Checkout repo (vdp)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/vdp
+
+      - name: Load .env file (vdp)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Launch Instill VDP (latest)
+        run: |
+          helm install vdp charts/vdp --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set pipelineBackend.image.tag=latest \
+            --set connectorBackend.image.tag=latest \
+            --set connectorBackend.excludelocalconnector=false \
+            --set controllerVDP.image.tag=latest
+
+      - name: Checkout repo (model)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/model
+
+      - name: Load .env file (model)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Launch Instill Model (latest)
+        run: |
+          helm install model charts/model --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set modelBackend.image.tag=latest \
+            --set controllerModel.image.tag=latest \
+            --set itMode.enabled=true
+
+      - name: Run console integration test (latest)
+        run: |
+          git clone https://github.com/instill-ai/console.git
+          cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:latest .
+          docker run -t --rm \
+            -e NEXT_PUBLIC_API_VERSION=v1alpha \
+            -e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
+            -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
+            -e NEXT_PUBLIC_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+            -e NEXT_SERVER_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+            -e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
+            -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
+            --entrypoint ./entrypoint-playwright.sh \
+            --name base-console-integration-test-latest \
+            console-playwright:latest
+
+      - name: Make down base, model and vdp helm chart
+        run: |
+          helm uninstall model --namespace instill-ai
+          helm uninstall vdp --namespace instill-ai
+          helm uninstall base --namespace instill-ai
+          kubectl delete namespace instill-ai
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Make down build-latest
+        run: |
+           pkill -f "port-forward"
+           EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+
+  helm-integration-test-release-linux:
+    if: inputs.target == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      # mono occupies port 8084 which conflicts with mgmt-backend
+      - name: Stop mono service
+        run: |
+          sudo kill -9 `sudo lsof -t -i:8084`
+          sudo lsof -i -P -n | grep LISTEN
+
+      - name: Free disk space
+        run: |
+          df --human-readable
+          sudo apt clean
+          docker rmi $(docker image ls --all --quiet)
+          rm --recursive --force "$AGENT_TOOLSDIRECTORY"
+          df --human-readable
+
+      - name: Start Minikube
+        run: minikube start --cpus 2 --memory 6096     
+
+      - name: Checkout repo (base)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Load .env file (base)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Install k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin     
+
+      - name: Launch Instill Base (release)
+        run: |
+          helm install base charts/base --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set tags.observability=false \
+            --set tags.prometheusStack=false \
+            --set apiGateway.image.tag=${API_GATEWAY_VERSION} \
+            --set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
+            --set console.image.tag=${CONSOLE_VERSION} \
+            --set apiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
+            --set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
+            --set consoleURL=http://localhost:${CONSOLE_PORT}
+
+      - name: Wait for base pods up
+        run: |
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+            echo "$(kubectl get pods --namespace instill-ai)"
+            sleep 10
+          done
+
+      - name: Port-forward of base api-gateway and console
+        run: |
+          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
+          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
+          while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+          while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
+
+      - name: Checkout repo (vdp)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/vdp
+
+      - name: Load .env file (vdp)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Launch Instill VDP (release)
+        run: |
+          helm install vdp charts/vdp --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set pipelineBackend.image.tag=latest \
+            --set connectorBackend.image.tag=latest \
+            --set connectorBackend.excludelocalconnector=false \
+            --set controllerVDP.image.tag=latest
+
+      - name: Checkout repo (model)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/model
+
+      - name: Load .env file (model)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Launch Instill Model (release)
+        run: |
+          helm install model charts/model --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set modelBackend.image.tag=latest \
+            --set controllerModel.image.tag=latest \
+            --set itMode.enabled=true
+
+      - name: Run console integration test (release)
+        run: |
+          git clone -b v$CONSOLE_VERSION https://github.com/instill-ai/console.git
+          cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:${{ env.CONSOLE_VERSION }} .
+          docker run -t --rm \
+            -e NEXT_PUBLIC_API_VERSION=v1alpha \
+            -e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
+            -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
+            -e NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+            -e NEXT_SERVER_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
+            -e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
+            -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
+            --network host \
+            --entrypoint ./entrypoint-playwright.sh \
+            --name base-console-integration-test-release \
+            console-playwright:${{ env.CONSOLE_VERSION }}
+
+  helm-integration-test-release-mac:
+    if: inputs.target == 'release'
+    runs-on: [self-hosted,macOS,base]
+    steps:
+      - name: Set up environment
+        run: |
+          brew install make
+
+      - name: Checkout repo (model)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/model
+
+      - name: Load .env file
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Check if Model Helm release exists
+        id: check-model-helm-release
+        run: |
+          if helm ls -n instill-ai | grep -q 'model'; then
+            echo "Helm release 'model' found."
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Helm release 'model' not found."
+          fi
+
+      - name: Uninstall Model Helm Release
+        if: steps.check-model-helm-release.outputs.release_exists == 'true'
+        run: |
+          helm uninstall model --namespace instill-ai
+
+      - name: Checkout repo (vdp)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/vdp
+
+      - name: Load .env file (vdp)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Check if VDP Helm release exists
+        id: check-vdp-helm-release
+        run: |
+          if helm ls -n instill-ai | grep -q 'vdp'; then
+            echo "Helm release 'vdp' found."
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Helm release 'vdp' not found."
+          fi
+
+      - name: Uninstall VDP Helm Release
+        if: steps.check-vdp-helm-release.outputs.release_exists == 'true'
+        run: |
+          helm uninstall vdp --namespace instill-ai
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Load .env file
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Check if Base Helm release exists
+        id: check-base-helm-release
+        run: |
+          if helm ls -n instill-ai | grep -q 'base'; then
+            echo "Helm release 'base' found."
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Helm release 'base' not found."
+          fi
+
+      - name: Uninstall Base Helm Release
+        if: steps.check-base-helm-release.outputs.release_exists == 'true'
+        run: |
+          helm uninstall base --namespace instill-ai
+          kubectl delete namespace instill-ai
+          EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+
+      - name: Install k6
+        run: |
+          brew install k6
+
+      - name: Launch Instill Base (release)
+        run: |
+          make build-release
+          helm install base charts/base --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set tags.observability=false \
+            --set tags.prometheusStack=false \
+            --set apiGateway.image.tag=${API_GATEWAY_VERSION} \
+            --set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
+            --set console.image.tag=${CONSOLE_VERSION} \
+            --set apiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+            --set console.serverApiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
+            --set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
+
+      - name: Wait for base pods up
+        run: |
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+            echo "$(kubectl get pods --namespace instill-ai)"
+            sleep 10
+          done
+
+      - name: Port-forward of base api-gateway and console
+        run: |
+          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
+          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          kubectl --namespace instill-ai port-forward ${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
+          while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
+          while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
+
+      - name: Checkout repo (vdp)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/vdp
+
+      - name: Load .env file (vdp)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Launch Instill VDP (release)
+        run: |
+          helm install vdp charts/vdp --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set pipelineBackend.image.tag=latest \
+            --set connectorBackend.image.tag=latest \
+            --set connectorBackend.excludelocalconnector=false \
+            --set controllerVDP.image.tag=latest
+
+      - name: Checkout repo (model)
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/model
+
+      - name: Load .env file (model)
+        uses: cardinalby/export-env-action@v2
+        with:
+          envFile: .env
+
+      - name: Launch Instill Model (release)
+        run: |
+          helm install model charts/model --namespace instill-ai --create-namespace \
+            --set edition=k8s-ce:test \
+            --set modelBackend.image.tag=latest \
+            --set controllerModel.image.tag=latest \
+            --set itMode.enabled=true
+
+      - name: Run console integration test (release)
+        run: |
+          git clone -b v$CONSOLE_VERSION https://github.com/instill-ai/console.git
+          cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:${{ env.CONSOLE_VERSION }} .
+          docker run -t --rm \
+            -e NEXT_PUBLIC_API_VERSION=v1alpha \
+            -e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
+            -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
+            -e NEXT_PUBLIC_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+            -e NEXT_SERVER_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
+            -e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
+            -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
+            --entrypoint ./entrypoint-playwright.sh \
+            --name base-console-integration-test-release \
+            console-playwright:${{ env.CONSOLE_VERSION }}
+
+      - name: Make down base, model and vdp helm chart
+        run: |
+          helm uninstall model --namespace instill-ai
+          helm uninstall vdp --namespace instill-ai
+          helm uninstall base --namespace instill-ai
+          kubectl delete namespace instill-ai
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: instill-ai/base
+
+      - name: Make down build-release
+        run: |
+           pkill -f "port-forward"
+           EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
