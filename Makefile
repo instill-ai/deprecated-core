@@ -30,14 +30,12 @@ all:			## Launch all services with their up-to-date release version
 	@make build-release
 	@[ ! -f "$(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid" ] && mkdir -p $(shell eval echo ${SYSTEM_CONFIG_PATH}) && docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid || true
 	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
-	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} rm -f
 
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
 	@make build-latest
 	@[ ! -f "$(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid" ] && mkdir -p $(shell eval echo ${SYSTEM_CONFIG_PATH}) && docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid || true
 	@COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
-	@COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml rm -f
 
 .PHONY: logs
 logs:			## Tail all logs with -n 10
@@ -49,19 +47,11 @@ pull:			## Pull all service images
 
 .PHONY: stop
 stop:			## Stop all components
-	@docker compose stop
+	@EDITION= DEFAULT_USER_UID= docker compose stop
 
 .PHONY: start
-start:			## Start all stopped services
-	@docker compose start
-
-.PHONY: restart
-restart:		## Restart all services
-	@docker compose restart
-
-.PHONY: rm
-rm:				## Remove all stopped service containers
-	@docker compose rm -f
+start:			## Start all stopped components
+	@EDITION= DEFAULT_USER_UID= docker compose start
 
 .PHONY: down
 down:			## Stop all services and remove all service containers and volumes
@@ -268,7 +258,6 @@ console-integration-test-latest:			## Run console integration test on the latest
 			cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/sh -c 'cd /instill-ai/vdp && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
 			/bin/sh -c 'cd /instill-ai/vdp && COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull' && \
-			/bin/sh -c 'cd /instill-ai/vdp && COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f' && \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run --rm \
@@ -280,7 +269,6 @@ console-integration-test-latest:			## Run console integration test on the latest
 			cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/sh -c 'cd /instill-ai/model && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
 			/bin/sh -c 'cd /instill-ai/model && COMPOSE_PROFILES=all EDITION=local-ce:test ITMODE_ENABLED=true TRITON_CONDA_ENV_PLATFORM=cpu docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull' && \
-			/bin/sh -c 'cd /instill-ai/model && COMPOSE_PROFILES=all EDITION=local-ce:test ITMODE_ENABLED=true TRITON_CONDA_ENV_PLATFORM=cpu docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f' && \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
 	@docker run --rm \
@@ -309,7 +297,6 @@ console-integration-test-release:			## Run console integration test on the relea
 			cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/sh -c 'cd /instill-ai/vdp && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
 			/bin/sh -c 'cd /instill-ai/vdp && COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull' && \
-			/bin/sh -c 'cd /instill-ai/vdp && COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f' && \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run --rm \
@@ -321,7 +308,6 @@ console-integration-test-release:			## Run console integration test on the relea
 			cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 			/bin/sh -c 'cd /instill-ai/model && make build-latest BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR}' && \
 			/bin/sh -c 'cd /instill-ai/model && COMPOSE_PROFILES=all EDITION=local-ce:test ITMODE_ENABLED=true TRITON_CONDA_ENV_PLATFORM=cpu docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull' && \
-			/bin/sh -c 'cd /instill-ai/model && COMPOSE_PROFILES=all EDITION=local-ce:test ITMODE_ENABLED=true TRITON_CONDA_ENV_PLATFORM=cpu docker compose -f docker-compose.yml -f docker-compose.latest.yml rm -f' && \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
 	@docker run --rm \
