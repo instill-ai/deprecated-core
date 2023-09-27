@@ -39,11 +39,11 @@ latest:			## Lunch all dependent services with their latest codebase
 
 .PHONY: logs
 logs:			## Tail all logs with -n 10
-	@docker compose logs --follow --tail=10
+	@EDITION= DEFAULT_USER_UID= docker compose logs --follow --tail=10
 
 .PHONY: pull
 pull:			## Pull all service images
-	@docker compose pull
+	@EDITION= DEFAULT_USER_UID= docker compose pull
 
 .PHONY: stop
 stop:			## Stop all components
@@ -101,7 +101,7 @@ down:			## Stop all services and remove all service containers and volumes
 				"; \
 		fi \
 	fi
-	@EDITION=NULL DEFAULT_USER_UID=$(cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+	@EDITION= DEFAULT_USER_UID=$(cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
 
 .PHONY: images
 images:			## List all container images
@@ -109,15 +109,15 @@ images:			## List all container images
 
 .PHONY: ps
 ps:				## List all service containers
-	@docker compose ps
+	@EDITION= DEFAULT_USER_UID= docker compose ps
 
 .PHONY: top
 top:			## Display all running service processes
-	@docker compose top
+	@EDITION= DEFAULT_USER_UID= docker compose top
 
 .PHONY: doc
 doc:						## Run Redoc for OpenAPI spec at http://localhost:3001
-	@docker compose up -d redoc_openapi
+	@EDITION= DEFAULT_USER_UID= docker compose up -d redoc_openapi
 
 .PHONY: build-latest
 build-latest:				## Build latest images for all Instill Base components
