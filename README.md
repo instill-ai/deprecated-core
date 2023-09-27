@@ -14,12 +14,24 @@
 
 Execute the following commands to start pre-built images with all the dependencies:
 
+**The stable release version**
+
 ```bash
-$ git clone https://github.com/instill-ai/base.git && cd base
+$ git clone -b v0.3.0-alpha https://github.com/instill-ai/base.git && cd base
 
 # Launch all services
 $ make all
 ```
+
+**The latest version for development**
+
+```bash
+$ git clone https://github.com/instill-ai/base.git && cd base
+
+# Launch all services
+$ make latest PROFILE=all
+```
+
 
 > **Note**
 > Code in the main branch tracks under-development progress towards the next release and may not work as expected. If you are looking for a stable alpha version, please use [latest release](https://github.com/instill-ai/vdp/releases).
