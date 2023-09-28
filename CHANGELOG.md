@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1-alpha](https://github.com/instill-ai/base/compare/v0.3.0-alpha...v0.3.1-alpha) (2023-09-28)
+
+
+### Bug Fixes
+
+* **makefile:** fix makefile doesn't get correct DEFAULT_USER_UID ([#38](https://github.com/instill-ai/base/issues/38)) ([9c6d212](https://github.com/instill-ai/base/commit/9c6d2128258770ad6669226f3f4bf38f4450ea93))
+
 ## [0.3.0-alpha](https://github.com/instill-ai/base/compare/v0.2.0-alpha...v0.3.0-alpha) (2023-09-13)
 
 
