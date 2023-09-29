@@ -28,14 +28,18 @@ HELM_RELEASE_NAME := base
 .PHONY: all
 all:			## Launch all services with their up-to-date release version
 	@make build-release
-	@[ ! -f "$(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid" ] && mkdir -p $(shell eval echo ${SYSTEM_CONFIG_PATH}) && docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid || true
-	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
+		@[ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ] && \
+		mkdir -p ${SYSTEM_CONFIG_PATH} && \
+		docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid || true && \
+		EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
 
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
 	@make build-latest
-	@[ ! -f "$(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid" ] && mkdir -p $(shell eval echo ${SYSTEM_CONFIG_PATH}) && docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid || true
-	@COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
+	@[ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ] && \
+		mkdir -p ${SYSTEM_CONFIG_PATH} && \
+		docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid || true && \
+		COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
 
 .PHONY: logs
 logs:			## Tail all logs with -n 10
@@ -101,7 +105,7 @@ down:			## Stop all services and remove all service containers and volumes
 				"; \
 		fi \
 	fi
-	@EDITION= DEFAULT_USER_UID=$(shell cat $(shell eval echo ${SYSTEM_CONFIG_PATH})/user_uid) docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+	@EDITION= DEFAULT_USER_UID= docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
 
 .PHONY: images
 images:			## List all container images
