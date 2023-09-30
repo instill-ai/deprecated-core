@@ -2,8 +2,8 @@ apiVersion: v2
 name: base
 description: The Helm chart of Instill Base
 type: application
-version: 0.1.4-alpha #! auto-updated by the CI workflow
-appVersion: 0.3.0-alpha #! auto-updated by the CI workflow
+version: 0.1.5-alpha #! auto-updated by the CI workflow
+appVersion: 0.4.0-alpha #! auto-updated by the CI workflow
 keywords:
   - unstructured data
   - pipeline

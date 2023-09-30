@@ -1,6 +1,6 @@
 # base
 
-![Version: 0.1.4-alpha](https://img.shields.io/badge/Version-0.1.4--alpha-informational?style=flat-square) ![AppVersion: 0.3.0-alpha](https://img.shields.io/badge/AppVersion-0.3.0--alpha-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.1.5-alpha](https://img.shields.io/badge/Version-0.1.5--alpha-informational?style=flat-square) ![AppVersion: 0.4.0-alpha](https://img.shields.io/badge/AppVersion-0.4.0--alpha-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 The Helm chart of Instill Base
 
