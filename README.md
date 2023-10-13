@@ -18,7 +18,7 @@ Execute the following commands to start pre-built images with all the dependenci
 
 <!-- x-release-please-start-version -->
 ```bash
-$ git clone -b v0.4.0-alpha https://github.com/instill-ai/base.git && cd base
+$ git clone -b v0.4.1-alpha https://github.com/instill-ai/base.git && cd base
 
 # Launch all services
 $ make all
