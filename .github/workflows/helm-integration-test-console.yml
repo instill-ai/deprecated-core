@@ -127,7 +127,7 @@ jobs:
             console-playwright:latest
 
   helm-integration-test-latest-mac:
-    if: inputs.target == 'latest' && github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && github.event.pull_request.merged == true
+    if: inputs.target == 'latest' && github.ref == 'refs/heads/main'
     runs-on: [self-hosted,macOS,base]
     steps:
       - name: Set up environment
