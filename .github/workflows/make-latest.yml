@@ -28,7 +28,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
       - name: Load .env file
         uses: cardinalby/export-env-action@v2
@@ -39,7 +39,7 @@ jobs:
         run: |
           curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin
 
-      - name: Launch Instill Base (latest)
+      - name: Launch Instill Core (latest)
         run: |
           make latest PROFILE=all EDITION=local-ce:test
 
@@ -48,17 +48,17 @@ jobs:
           docker ps -a
           sleep 30
 
-      - name: Curl to base (influxdb, temporal, console and etcd) healthcheck endpoint
+      - name: Curl to core (influxdb, temporal, console and etcd) healthcheck endpoint
         run: |
           curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:8086/health
           curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:8088/health
           curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:3000
           curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:3379/health
 
-      - name: Curl to base services healthcheck endpoint
+      - name: Curl to core services healthcheck endpoint
         run: |
-          curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:8080/base/v1alpha/health/mgmt
+          curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:8080/core/v1alpha/health/mgmt
 
-      - name: Tear down Instill Base (latest)
+      - name: Tear down Instill Core (latest)
         run: |
           make down

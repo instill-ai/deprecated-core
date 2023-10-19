@@ -10,7 +10,6 @@ services:
     image: ${API_GATEWAY_IMAGE}:${API_GATEWAY_VERSION}
     restart: unless-stopped
     environment:
-      API_GATEWAY_PROJECT: base
       API_GATEWAY_HOST: ${API_GATEWAY_HOST}
       API_GATEWAY_PORT: ${API_GATEWAY_PORT}
       API_GATEWAY_STATS_PORT: ${API_GATEWAY_STATS_PORT}
