@@ -32,7 +32,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
       - name: Load .env file
         uses: cardinalby/export-env-action@v2
@@ -43,7 +43,7 @@ jobs:
         run: |
           curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin
 
-      - name: Launch Instill Base (latest)
+      - name: Launch Instill Core (latest)
         run: |
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
@@ -60,7 +60,7 @@ jobs:
 
   integration-test-latest-mac:
     if: inputs.target == 'latest' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted,macOS,base]
+    runs-on: [self-hosted, macOS, core]
     steps:
       - name: Set up environment
         run: |
@@ -69,7 +69,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
       - name: Load .env file
         uses: cardinalby/export-env-action@v2
@@ -80,12 +80,12 @@ jobs:
         run: |
           brew install k6
 
-      - name: Make down base
+      - name: Make down core
         run: |
           docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
           sleep 60
 
-      - name: Launch Instill Base (latest)
+      - name: Launch Instill Core (latest)
         run: |
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
@@ -100,14 +100,14 @@ jobs:
           cd ${{ inputs.component }}
           make integration-test API_GATEWAY_URL=localhost:${API_GATEWAY_PORT}
 
-      - name: Make down base
+      - name: Make down core
         run: |
-          docker rm -f base-build-latest >/dev/null 2>&1
-          docker rm -f base-backend-integration-test-latest >/dev/null 2>&1
-          docker rm -f base-console-integration-test-latest >/dev/null 2>&1
-          docker rm -f base-backend-integration-test-helm-latest >/dev/null 2>&1
-          docker rm -f base-console-integration-test-helm-latest >/dev/null 2>&1
-          docker rm -f base-dind-latest >/dev/null 2>&1
+          docker rm -f core-build-latest >/dev/null 2>&1
+          docker rm -f core-backend-integration-test-latest >/dev/null 2>&1
+          docker rm -f core-console-integration-test-latest >/dev/null 2>&1
+          docker rm -f core-backend-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f core-console-integration-test-helm-latest >/dev/null 2>&1
+          docker rm -f core-dind-latest >/dev/null 2>&1
           EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
           sleep 60
 
@@ -132,7 +132,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
       - name: Load .env file
         uses: cardinalby/export-env-action@v2
@@ -148,7 +148,7 @@ jobs:
         run: |
           echo "COMPONENT_NAME=$(echo ${{ inputs.component }} | tr 'a-z-' 'A-Z_')" >> $GITHUB_OUTPUT
 
-      - name: Launch Instill Base (release)
+      - name: Launch Instill Core (release)
         run: |
           EDITION=local-ce:test \
           docker compose up -d --quiet-pull
@@ -165,7 +165,7 @@ jobs:
 
   integration-test-release-mac:
     if: inputs.target == 'release'
-    runs-on: [self-hosted,macOS,base]
+    runs-on: [self-hosted, macOS, core]
     steps:
       - name: Set up environment
         run: |
@@ -174,7 +174,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
       - name: Load .env file
         uses: cardinalby/export-env-action@v2
@@ -185,7 +185,7 @@ jobs:
         run: |
           brew install k6
 
-      - name: Make down base
+      - name: Make down core
         run: |
           docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
           sleep 60
@@ -195,7 +195,7 @@ jobs:
         run: |
           echo "COMPONENT_NAME=$(echo ${{ inputs.component }} | tr 'a-z-' 'A-Z_')" >> $GITHUB_OUTPUT
 
-      - name: Launch Instill Base (release)
+      - name: Launch Instill Core (release)
         run: |
           EDITION=local-ce:test \
           docker compose up -d --quiet-pull
@@ -210,13 +210,13 @@ jobs:
           cd ${{ inputs.component }}
           make integration-test API_GATEWAY_URL=localhost:${API_GATEWAY_PORT}
 
-      - name: Make down base
+      - name: Make down core
         run: |
-          docker rm -f base-build-release >/dev/null 2>&1
-          docker rm -f base-backend-integration-test-release >/dev/null 2>&1
-          docker rm -f base-console-integration-test-release >/dev/null 2>&1
-          docker rm -f base-backend-integration-test-helm-release >/dev/null 2>&1
-          docker rm -f base-console-integration-test-helm-release >/dev/null 2>&1
-          docker rm -f base-dind-release >/dev/null 2>&1
+          docker rm -f core-build-release >/dev/null 2>&1
+          docker rm -f core-backend-integration-test-release >/dev/null 2>&1
+          docker rm -f core-console-integration-test-release >/dev/null 2>&1
+          docker rm -f core-backend-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f core-console-integration-test-helm-release >/dev/null 2>&1
+          docker rm -f core-dind-release >/dev/null 2>&1
           EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
           sleep 60

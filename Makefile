@@ -13,24 +13,24 @@ endif
 
 UNAME_S := $(shell uname -s)
 
-CONTAINER_BUILD_NAME := base-build
-CONTAINER_COMPOSE_NAME := base-dind
-CONTAINER_COMPOSE_IMAGE_NAME := instill/base-compose
+CONTAINER_BUILD_NAME := core-build
+CONTAINER_COMPOSE_NAME := core-dind
+CONTAINER_COMPOSE_IMAGE_NAME := instill/core-compose
 CONTAINER_PLAYWRIGHT_IMAGE_NAME := instill/console-playwright
-CONTAINER_BACKEND_INTEGRATION_TEST_NAME := base-backend-integration-test
-CONTAINER_CONSOLE_INTEGRATION_TEST_NAME := base-console-integration-test
+CONTAINER_BACKEND_INTEGRATION_TEST_NAME := core-backend-integration-test
+CONTAINER_CONSOLE_INTEGRATION_TEST_NAME := core-console-integration-test
 
 HELM_NAMESPACE := instill-ai
-HELM_RELEASE_NAME := base
+HELM_RELEASE_NAME := core
 
 #============================================================================
 
 .PHONY: all
 all:			## Launch all services with their up-to-date release version
 	@make build-release
-		@[ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ] && \
+	@[ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ] && \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
-		docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid || true && \
+		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid || true && \
 		EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
 
 .PHONY: latest
@@ -38,7 +38,7 @@ latest:			## Lunch all dependent services with their latest codebase
 	@make build-latest
 	@[ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ] && \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
-		docker run --rm ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid || true && \
+		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid || true && \
 		COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
 
 .PHONY: logs
@@ -124,7 +124,7 @@ doc:						## Run Redoc for OpenAPI spec at http://localhost:3001
 	@EDITION= DEFAULT_USER_UID= docker compose up -d redoc_openapi
 
 .PHONY: build-latest
-build-latest:				## Build latest images for all Instill Base components
+build-latest:				## Build latest images for all Instill Core components
 	@docker build --progress plain \
 		--build-arg ALPINE_VERSION=${ALPINE_VERSION} \
 		--build-arg GOLANG_VERSION=${GOLANG_VERSION} \
@@ -134,8 +134,8 @@ build-latest:				## Build latest images for all Instill Base components
 		-t ${CONTAINER_COMPOSE_IMAGE_NAME}:latest .
 	@docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v ${BUILD_CONFIG_DIR_PATH}/.env:/instill-ai/base/.env \
-		-v ${BUILD_CONFIG_DIR_PATH}/docker-compose.build.yml:/instill-ai/base/docker-compose.build.yml \
+		-v ${BUILD_CONFIG_DIR_PATH}/.env:/instill-ai/core/.env \
+		-v ${BUILD_CONFIG_DIR_PATH}/docker-compose.build.yml:/instill-ai/core/docker-compose.build.yml \
 		--name ${CONTAINER_BUILD_NAME}-latest \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
 			API_GATEWAY_VERSION=latest \
@@ -145,7 +145,7 @@ build-latest:				## Build latest images for all Instill Base components
 		"
 
 .PHONY: build-release
-build-release:				## Build release images for all Instill Base components
+build-release:				## Build release images for all Instill Core components
 	@docker build --progress plain \
 		--build-arg ALPINE_VERSION=${ALPINE_VERSION} \
 		--build-arg GOLANG_VERSION=${GOLANG_VERSION} \
@@ -160,8 +160,8 @@ build-release:				## Build release images for all Instill Base components
 		-t ${CONTAINER_COMPOSE_IMAGE_NAME}:release .
 	@docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v ${BUILD_CONFIG_DIR_PATH}/.env:/instill-ai/base/.env \
-		-v ${BUILD_CONFIG_DIR_PATH}/docker-compose.build.yml:/instill-ai/base/docker-compose.build.yml \
+		-v ${BUILD_CONFIG_DIR_PATH}/.env:/instill-ai/core/.env \
+		-v ${BUILD_CONFIG_DIR_PATH}/docker-compose.build.yml:/instill-ai/core/docker-compose.build.yml \
 		--name ${CONTAINER_BUILD_NAME}-release \
 		${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
 			API_GATEWAY_VERSION=${API_GATEWAY_VERSION} \
@@ -171,7 +171,7 @@ build-release:				## Build release images for all Instill Base components
 		"
 
 .PHONY: integration-test-latest
-integration-test-latest:			## Run integration test on the latest Instill Base
+integration-test-latest:			## Run integration test on the latest Instill Core
 	@make latest PROFILE=all EDITION=local-ce:test
 	@docker run --rm \
 		--network instill-network \
@@ -182,7 +182,7 @@ integration-test-latest:			## Run integration test on the latest Instill Base
 	@make down
 
 .PHONY: integration-test-release
-integration-test-release:			## Run integration test on the release Instill Base
+integration-test-release:			## Run integration test on the release Instill Core
 	@make all EDITION=local-ce:test
 	@docker run --rm \
 		--network instill-network \
@@ -193,15 +193,15 @@ integration-test-release:			## Run integration test on the release Instill Base
 	@make down
 
 .PHONY: helm-integration-test-latest
-helm-integration-test-latest:                       ## Run integration test on the Helm latest for Instill Base
+helm-integration-test-latest:                       ## Run integration test on the Helm latest for Instill Core
 	@make build-latest
-	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
+	@helm install ${HELM_RELEASE_NAME} charts/core --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
 		--set apiGateway.image.tag=latest \
 		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
 		--set tags.observability=false
-	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
 	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
@@ -220,15 +220,15 @@ endif
 	@make down
 
 .PHONY: helm-integration-test-release
-helm-integration-test-release:                       ## Run integration test on the Helm release for Instill Base
+helm-integration-test-release:                       ## Run integration test on the Helm release for Instill Core
 	@make build-release
-	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
+	@helm install ${HELM_RELEASE_NAME} charts/core --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
 		--set apiGateway.image.tag=${API_GATEWAY_VERSION} \
 		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
 		--set tags.observability=false
-	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
 	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
@@ -251,7 +251,7 @@ endif
 # ==================================================================
 
 .PHONY: console-integration-test-latest
-console-integration-test-latest:			## Run console integration test on the latest Instill Base
+console-integration-test-latest:			## Run console integration test on the latest Instill Core
 	@make latest PROFILE=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -290,7 +290,7 @@ console-integration-test-latest:			## Run console integration test on the latest
 	@make down
 
 .PHONY: console-integration-test-release
-console-integration-test-release:			## Run console integration test on the release Instill Base
+console-integration-test-release:			## Run console integration test on the release Instill Core
 	@make all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -329,10 +329,10 @@ console-integration-test-release:			## Run console integration test on the relea
 	@make down
 
 .PHONY: console-helm-integration-test-latest
-console-helm-integration-test-latest:                       ## Run console integration test on the Helm latest for Instill Base
+console-helm-integration-test-latest:                       ## Run console integration test on the Helm latest for Instill Core
 	@make build-latest
 ifeq ($(UNAME_S),Darwin)
-	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
+	@helm install ${HELM_RELEASE_NAME} charts/core --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
 		--set tags.observability=false \
 		--set tags.prometheusStack=false \
@@ -343,7 +343,7 @@ ifeq ($(UNAME_S),Darwin)
 		--set console.serverApiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		--set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
 else ifeq ($(UNAME_S),Linux)
-	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
+	@helm install ${HELM_RELEASE_NAME} charts/core --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
 		--set tags.observability=false \
 		--set tags.prometheusStack=false \
@@ -354,7 +354,7 @@ else ifeq ($(UNAME_S),Linux)
 		--set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
 		--set consoleURL=http://localhost:${CONSOLE_PORT}
 endif
-	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
 	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@export CONSOLE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
@@ -432,10 +432,10 @@ endif
 	@make down
 
 .PHONY: console-helm-integration-test-release
-console-helm-integration-test-release:                       ## Run console integration test on the Helm release for Instill Base
+console-helm-integration-test-release:                       ## Run console integration test on the Helm release for Instill Core
 	@make build-release
 ifeq ($(UNAME_S),Darwin)
-	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
+	@helm install ${HELM_RELEASE_NAME} charts/core --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
 		--set tags.observability=false \
 		--set tags.prometheusStack=false \
@@ -446,7 +446,7 @@ ifeq ($(UNAME_S),Darwin)
 		--set console.serverApiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		--set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
 else ifeq ($(UNAME_S),Linux)
-	@helm install ${HELM_RELEASE_NAME} charts/base --namespace ${HELM_NAMESPACE} --create-namespace \
+	@helm install ${HELM_RELEASE_NAME} charts/core --namespace ${HELM_NAMESPACE} --create-namespace \
 		--set edition=k8s-ce:test \
 		--set tags.observability=false \
 		--set tags.prometheusStack=false \
@@ -457,7 +457,7 @@ else ifeq ($(UNAME_S),Linux)
 		--set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
 		--set consoleURL=http://localhost:${CONSOLE_PORT}
 endif
-	@kubectl rollout status deployment base-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
 	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@export CONSOLE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \

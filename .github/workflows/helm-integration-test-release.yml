@@ -7,18 +7,18 @@ on:
       - release-please--branches--main
     tags:
       - v*
-  
+
 jobs:
   backend:
     strategy:
       fail-fast: false
       matrix:
         component: [mgmt-backend]
-    uses: instill-ai/base/.github/workflows/helm-integration-test-backend.yml@main
+    uses: instill-ai/core/.github/workflows/helm-integration-test-backend.yml@main
     with:
       component: ${{ matrix.component }}
       target: release
   console:
-    uses: instill-ai/base/.github/workflows/helm-integration-test-console.yml@main
+    uses: instill-ai/core/.github/workflows/helm-integration-test-console.yml@main
     with:
-      target: release    
+      target: release

@@ -27,25 +27,25 @@ jobs:
           df --human-readable
 
       - name: Start Minikube
-        run: minikube start --cpus 2 --memory 6096    
+        run: minikube start --cpus 2 --memory 6096
 
-      - name: Checkout repo (base)
+      - name: Checkout repo (core)
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
-      - name: Load .env file (base)
+      - name: Load .env file (core)
         uses: cardinalby/export-env-action@v2
         with:
           envFile: .env
 
       - name: Install k6
         run: |
-          curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin    
+          curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin
 
-      - name: Launch Instill Base (latest)
+      - name: Launch Instill Core (latest)
         run: |
-          helm install base charts/base --namespace instill-ai --create-namespace \
+          helm install core charts/core --namespace instill-ai --create-namespace \
             --set edition=k8s-ce:test \
             --set tags.observability=false \
             --set tags.prometheusStack=false \
@@ -56,18 +56,18 @@ jobs:
             --set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
             --set consoleURL=http://localhost:${CONSOLE_PORT}
 
-      - name: Wait for base pods up
+      - name: Wait for core pods up
         run: |
-          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=core" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
             echo "$(kubectl get pods --namespace instill-ai)"
             sleep 10
           done
 
-      - name: Port-forward of base api-gateway and console
+      - name: Port-forward of core api-gateway and console
         run: |
-          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=core" -o json | jq -r '.items[0].metadata.name')
           kubectl --namespace instill-ai port-forward ${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=core" -o json | jq -r '.items[0].metadata.name')
           kubectl --namespace instill-ai port-forward ${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
           while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
           while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
@@ -123,12 +123,12 @@ jobs:
             -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
             --network host \
             --entrypoint ./entrypoint-playwright.sh \
-            --name base-console-integration-test-latest \
+            --name core-console-integration-test-latest \
             console-playwright:latest
 
   helm-integration-test-latest-mac:
     if: inputs.target == 'latest' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted,macOS,base]
+    runs-on: [self-hosted, macOS, core]
     steps:
       - name: Set up environment
         run: |
@@ -144,7 +144,7 @@ jobs:
         with:
           envFile: .env
 
-      - name: Check if Model Helm release exists
+      - name: Check if Instill Model Helm release exists
         id: check-model-helm-release
         run: |
           if helm ls -n instill-ai | grep -q 'model'; then
@@ -154,7 +154,7 @@ jobs:
             echo "Helm release 'model' not found."
           fi
 
-      - name: Uninstall Model Helm Release
+      - name: Uninstall Instill Model Helm Release
         if: steps.check-model-helm-release.outputs.release_exists == 'true'
         run: |
           helm uninstall model --namespace instill-ai
@@ -169,7 +169,7 @@ jobs:
         with:
           envFile: .env
 
-      - name: Check if VDP Helm release exists
+      - name: Check if Instill VDP Helm release exists
         id: check-vdp-helm-release
         run: |
           if helm ls -n instill-ai | grep -q 'vdp'; then
@@ -179,7 +179,7 @@ jobs:
             echo "Helm release 'vdp' not found."
           fi
 
-      - name: Uninstall VDP Helm Release
+      - name: Uninstall Instill VDP Helm Release
         if: steps.check-vdp-helm-release.outputs.release_exists == 'true'
         run: |
           helm uninstall vdp --namespace instill-ai
@@ -187,38 +187,38 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
       - name: Load .env file
         uses: cardinalby/export-env-action@v2
         with:
           envFile: .env
 
-      - name: Check if Base Helm release exists
-        id: check-base-helm-release
+      - name: Check if Instill Core Helm release exists
+        id: check-core-helm-release
         run: |
-          if helm ls -n instill-ai | grep -q 'base'; then
-            echo "Helm release 'base' found."
+          if helm ls -n instill-ai | grep -q 'core'; then
+            echo "Helm release 'core' found."
             echo "release_exists=true" >> $GITHUB_OUTPUT
           else
-            echo "Helm release 'base' not found."
+            echo "Helm release 'core' not found."
           fi
 
-      - name: Uninstall Base Helm Release
-        if: steps.check-base-helm-release.outputs.release_exists == 'true'
+      - name: Uninstall Instill Core Helm Release
+        if: steps.check-core-helm-release.outputs.release_exists == 'true'
         run: |
-          helm uninstall base --namespace instill-ai
+          helm uninstall core --namespace instill-ai
           kubectl delete namespace instill-ai
           EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
 
       - name: Install k6
         run: |
-          brew install k6 
+          brew install k6
 
-      - name: Launch Instill Base (latest)
+      - name: Launch Instill Core (latest)
         run: |
           make build-latest
-          helm install base charts/base --namespace instill-ai --create-namespace \
+          helm install core charts/core --namespace instill-ai --create-namespace \
             --set edition=k8s-ce:test \
             --set tags.observability=false \
             --set tags.prometheusStack=false \
@@ -229,21 +229,21 @@ jobs:
             --set console.serverApiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
             --set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
 
-      - name: Wait for base pods up
+      - name: Wait for core pods up
         run: |
-          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=core" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
             echo "$(kubectl get pods --namespace instill-ai)"
             sleep 10
           done
 
-      - name: Port-forward of base api-gateway and console
+      - name: Port-forward of core api-gateway and console
         run: |
-          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=core" -o json | jq -r '.items[0].metadata.name')
           kubectl --namespace instill-ai port-forward ${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=core" -o json | jq -r '.items[0].metadata.name')
           kubectl --namespace instill-ai port-forward ${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
           while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
-          while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done      
+          while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
 
       - name: Checkout repo (vdp)
         uses: actions/checkout@v3
@@ -295,25 +295,25 @@ jobs:
             -e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
             -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
             --entrypoint ./entrypoint-playwright.sh \
-            --name base-console-integration-test-latest \
+            --name core-console-integration-test-latest \
             console-playwright:latest
 
-      - name: Make down base, model and vdp helm chart
+      - name: Make down core, model and vdp helm chart
         run: |
           helm uninstall model --namespace instill-ai
           helm uninstall vdp --namespace instill-ai
-          helm uninstall base --namespace instill-ai
+          helm uninstall core --namespace instill-ai
           kubectl delete namespace instill-ai
 
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
       - name: Make down build-latest
         run: |
-           pkill -f "port-forward"
-           EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+          pkill -f "port-forward"
+          EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
 
   helm-integration-test-release-linux:
     if: inputs.target == 'release'
@@ -334,25 +334,25 @@ jobs:
           df --human-readable
 
       - name: Start Minikube
-        run: minikube start --cpus 2 --memory 6096     
+        run: minikube start --cpus 2 --memory 6096
 
-      - name: Checkout repo (base)
+      - name: Checkout repo (core)
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
-      - name: Load .env file (base)
+      - name: Load .env file (core)
         uses: cardinalby/export-env-action@v2
         with:
           envFile: .env
 
       - name: Install k6
         run: |
-          curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin     
+          curl https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1 && sudo cp k6 /usr/bin
 
-      - name: Launch Instill Base (release)
+      - name: Launch Instill Core (release)
         run: |
-          helm install base charts/base --namespace instill-ai --create-namespace \
+          helm install core charts/core --namespace instill-ai --create-namespace \
             --set edition=k8s-ce:test \
             --set tags.observability=false \
             --set tags.prometheusStack=false \
@@ -363,18 +363,18 @@ jobs:
             --set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
             --set consoleURL=http://localhost:${CONSOLE_PORT}
 
-      - name: Wait for base pods up
+      - name: Wait for core pods up
         run: |
-          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=core" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
             echo "$(kubectl get pods --namespace instill-ai)"
             sleep 10
           done
 
-      - name: Port-forward of base api-gateway and console
+      - name: Port-forward of core api-gateway and console
         run: |
-          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=core" -o json | jq -r '.items[0].metadata.name')
           kubectl --namespace instill-ai port-forward ${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=core" -o json | jq -r '.items[0].metadata.name')
           kubectl --namespace instill-ai port-forward ${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
           while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
           while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
@@ -430,12 +430,12 @@ jobs:
             -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
             --network host \
             --entrypoint ./entrypoint-playwright.sh \
-            --name base-console-integration-test-release \
+            --name core-console-integration-test-release \
             console-playwright:${{ env.CONSOLE_VERSION }}
 
   helm-integration-test-release-mac:
     if: inputs.target == 'release'
-    runs-on: [self-hosted,macOS,base]
+    runs-on: [self-hosted, macOS, core]
     steps:
       - name: Set up environment
         run: |
@@ -451,7 +451,7 @@ jobs:
         with:
           envFile: .env
 
-      - name: Check if Model Helm release exists
+      - name: Check if Instill Model Helm release exists
         id: check-model-helm-release
         run: |
           if helm ls -n instill-ai | grep -q 'model'; then
@@ -461,7 +461,7 @@ jobs:
             echo "Helm release 'model' not found."
           fi
 
-      - name: Uninstall Model Helm Release
+      - name: Uninstall Instill Model Helm Release
         if: steps.check-model-helm-release.outputs.release_exists == 'true'
         run: |
           helm uninstall model --namespace instill-ai
@@ -476,7 +476,7 @@ jobs:
         with:
           envFile: .env
 
-      - name: Check if VDP Helm release exists
+      - name: Check if Instill VDP Helm release exists
         id: check-vdp-helm-release
         run: |
           if helm ls -n instill-ai | grep -q 'vdp'; then
@@ -486,7 +486,7 @@ jobs:
             echo "Helm release 'vdp' not found."
           fi
 
-      - name: Uninstall VDP Helm Release
+      - name: Uninstall Instill VDP Helm Release
         if: steps.check-vdp-helm-release.outputs.release_exists == 'true'
         run: |
           helm uninstall vdp --namespace instill-ai
@@ -494,27 +494,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
       - name: Load .env file
         uses: cardinalby/export-env-action@v2
         with:
           envFile: .env
 
-      - name: Check if Base Helm release exists
-        id: check-base-helm-release
+      - name: Check if Instill Core Helm release exists
+        id: check-core-helm-release
         run: |
-          if helm ls -n instill-ai | grep -q 'base'; then
-            echo "Helm release 'base' found."
+          if helm ls -n instill-ai | grep -q 'core'; then
+            echo "Helm release 'core' found."
             echo "release_exists=true" >> $GITHUB_OUTPUT
           else
-            echo "Helm release 'base' not found."
+            echo "Helm release 'core' not found."
           fi
 
-      - name: Uninstall Base Helm Release
-        if: steps.check-base-helm-release.outputs.release_exists == 'true'
+      - name: Uninstall Instill Core Helm Release
+        if: steps.check-core-helm-release.outputs.release_exists == 'true'
         run: |
-          helm uninstall base --namespace instill-ai
+          helm uninstall core --namespace instill-ai
           kubectl delete namespace instill-ai
           EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
 
@@ -522,10 +522,10 @@ jobs:
         run: |
           brew install k6
 
-      - name: Launch Instill Base (release)
+      - name: Launch Instill Core (release)
         run: |
           make build-release
-          helm install base charts/base --namespace instill-ai --create-namespace \
+          helm install core charts/core --namespace instill-ai --create-namespace \
             --set edition=k8s-ce:test \
             --set tags.observability=false \
             --set tags.prometheusStack=false \
@@ -536,18 +536,18 @@ jobs:
             --set console.serverApiGatewayURL=http://host.docker.internal:${API_GATEWAY_PORT} \
             --set consoleURL=http://host.docker.internal:${CONSOLE_PORT}
 
-      - name: Wait for base pods up
+      - name: Wait for core pods up
         run: |
-          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
+          while [[ $(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=core" -o 'jsonpath={..status.phase}') != *"Running"* ]]; do
             echo "$(kubectl get pods --namespace instill-ai)"
             sleep 10
           done
 
-      - name: Port-forward of base api-gateway and console
+      - name: Port-forward of core api-gateway and console
         run: |
-          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          API_GATEWAY_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=core" -o json | jq -r '.items[0].metadata.name')
           kubectl --namespace instill-ai port-forward ${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
-          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=base" -o json | jq -r '.items[0].metadata.name')
+          CONSOLE_POD_NAME=$(kubectl get pods --namespace instill-ai -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=core" -o json | jq -r '.items[0].metadata.name')
           kubectl --namespace instill-ai port-forward ${CONSOLE_POD_NAME} ${CONSOLE_PORT}:${CONSOLE_PORT} > /dev/null 2>&1 &
           while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
           while ! nc -vz localhost ${CONSOLE_PORT} > /dev/null 2>&1; do sleep 1; done
@@ -602,22 +602,22 @@ jobs:
             -e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
             -e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
             --entrypoint ./entrypoint-playwright.sh \
-            --name base-console-integration-test-release \
+            --name core-console-integration-test-release \
             console-playwright:${{ env.CONSOLE_VERSION }}
 
-      - name: Make down base, model and vdp helm chart
+      - name: Make down core, model and vdp helm chart
         run: |
           helm uninstall model --namespace instill-ai
           helm uninstall vdp --namespace instill-ai
-          helm uninstall base --namespace instill-ai
+          helm uninstall core --namespace instill-ai
           kubectl delete namespace instill-ai
 
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          repository: instill-ai/base
+          repository: instill-ai/core
 
       - name: Make down build-release
         run: |
-           pkill -f "port-forward"
-           EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
+          pkill -f "port-forward"
+          EDITION=NULL docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
