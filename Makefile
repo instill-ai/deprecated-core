@@ -27,19 +27,91 @@ HELM_RELEASE_NAME := core
 
 .PHONY: all
 all:			## Launch all services with their up-to-date release version
-	@make build-release
-	@[ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ] && \
+	@if [ "${BUILD}" = "true" ]; then make build-release; fi
+	@if [ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ]; then \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
-		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid || true && \
-		EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
+		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
+	fi
+	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
+	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "vdp" ]; then \
+		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
+		export SYSTEM_CONFIG_PATH=$(shell eval echo ${SYSTEM_CONFIG_PATH}) && \
+		docker run --rm \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
+			-e BUILD=${BUILD} \
+			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
+			--name ${CONTAINER_COMPOSE_NAME}-release \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
+				cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
+				cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+				/bin/sh -c 'cd /instill-ai/vdp && make all BUILD=${BUILD} EDITION=$${EDITION:=local-ce} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
+				/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
+		" && rm -rf $${TMP_CONFIG_DIR}; \
+	fi
+	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "model" ]; then \
+		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
+		export SYSTEM_CONFIG_PATH=$(shell eval echo ${SYSTEM_CONFIG_PATH}) && \
+		docker run --rm \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
+			-e BUILD=${BUILD} \
+			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
+			--name ${CONTAINER_COMPOSE_NAME}-latest \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
+				cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
+				cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+				/bin/sh -c 'cd /instill-ai/model && make all BUILD=${BUILD} EDITION=$${EDITION:=local-ce} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
+				/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
+		" && rm -rf $${TMP_CONFIG_DIR}; \
+	fi
 
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
-	@make build-latest
-	@[ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ] && \
+	@if [ "${BUILD}" = "true" ]; then make build-latest; fi
+	@if [ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ]; then \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
-		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid || true && \
-		COMPOSE_PROFILES=$(PROFILE) EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
+		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
+	fi
+	@COMPOSE_PROFILES=${PROFILE} EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
+	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "vdp" ]; then \
+		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
+		export SYSTEM_CONFIG_PATH=$(shell eval echo ${SYSTEM_CONFIG_PATH}) && \
+		docker run --rm \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
+			-e BUILD=${BUILD} \
+			-e PROFILE=${PROFILE} \
+			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
+			--name ${CONTAINER_COMPOSE_NAME}-latest \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
+				cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
+				cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+				/bin/sh -c 'cd /instill-ai/vdp && make latest BUILD=${BUILD} PROFILE=$${PROFILE} EDITION=$${EDITION:=local-ce:latest} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
+				/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
+		" && rm -rf $${TMP_CONFIG_DIR}; \
+	fi
+	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "model" ]; then \
+		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
+		export SYSTEM_CONFIG_PATH=$(shell eval echo ${SYSTEM_CONFIG_PATH}) && \
+		docker run --rm \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
+			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
+			-e BUILD=${BUILD} \
+			-e PROFILE=${PROFILE} \
+			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
+			--name ${CONTAINER_COMPOSE_NAME}-latest \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
+				cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
+				cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
+				/bin/sh -c 'cd /instill-ai/model && make latest BUILD=${BUILD} PROFILE=$${PROFILE} EDITION=$${EDITION:=local-ce:latest} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
+				/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
+		" && rm -rf $${TMP_CONFIG_DIR}; \
+	fi
 
 .PHONY: logs
 logs:			## Tail all logs with -n 10
@@ -71,39 +143,22 @@ down:			## Stop all services and remove all service containers and volumes
 	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-release >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_COMPOSE_NAME}-latest >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_COMPOSE_NAME}-release >/dev/null 2>&1
-	@if docker compose ls -q | grep -q "instill-model"; then \
-		if docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:latest >/dev/null 2>&1; then \
-			docker run --rm \
-				-v /var/run/docker.sock:/var/run/docker.sock \
-				--name ${CONTAINER_COMPOSE_NAME}-model \
-				${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
-					/bin/sh -c 'cd /instill-ai/model && make down' \
-				"; \
-		elif docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:release >/dev/null 2>&1; then \
-			docker run --rm \
-				-v /var/run/docker.sock:/var/run/docker.sock \
-				--name ${CONTAINER_COMPOSE_NAME}-model \
-				${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
-					/bin/sh -c 'cd /instill-ai/model && make down' \
-				"; \
-		fi \
-	fi
-	@if docker compose ls -q | grep -q "instill-vdp"; then \
-		if docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:latest >/dev/null 2>&1; then \
-			docker run --rm \
-				-v /var/run/docker.sock:/var/run/docker.sock \
-				--name ${CONTAINER_COMPOSE_NAME}-vdp \
-				${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
-					/bin/sh -c 'cd /instill-ai/vdp && make down' \
-				"; \
-		elif docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:release >/dev/null 2>&1; then \
-			docker run --rm \
-				-v /var/run/docker.sock:/var/run/docker.sock \
-				--name ${CONTAINER_COMPOSE_NAME}-vdp \
-				${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
-					/bin/sh -c 'cd /instill-ai/vdp && make down' \
-				"; \
-		fi \
+	@if [ "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:latest --format='yes')" = "yes" ]; then \
+		docker run --rm \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			--name ${CONTAINER_COMPOSE_NAME} \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
+				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' vdp-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/vdp && make down; fi' && \
+				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' model-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/model && make down; fi' \
+			"; \
+	elif [ "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:release --format='yes')" = "yes" ]; then \
+		docker run --rm \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			--name ${CONTAINER_COMPOSE_NAME} \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
+				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' vdp-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/vdp && make down; fi' && \
+				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' model-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/model && make down; fi' \
+			"; \
 	fi
 	@EDITION= DEFAULT_USER_UID= docker compose -f docker-compose.yml -f docker-compose.observe.yml down -v
 
@@ -172,7 +227,7 @@ build-release:				## Build release images for all Instill Core components
 
 .PHONY: integration-test-latest
 integration-test-latest:			## Run integration test on the latest Instill Core
-	@make latest PROFILE=all EDITION=local-ce:test
+	@make latest BUILD=true PROJECT=core EDITION=local-ce:test
 	@docker run --rm \
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-latest \
@@ -183,7 +238,7 @@ integration-test-latest:			## Run integration test on the latest Instill Core
 
 .PHONY: integration-test-release
 integration-test-release:			## Run integration test on the release Instill Core
-	@make all EDITION=local-ce:test
+	@make all BUILD=true PROJECT=core EDITION=local-ce:test
 	@docker run --rm \
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-release \
@@ -246,13 +301,13 @@ endif
 	@pkill -f "port-forward"
 	@make down
 
-# ==================================================================
-# ==================== Console Integration Test ====================
-# ==================================================================
+# ========================================================================================
+# ==================== Console Integration Test (placeholder for now) ====================
+# ========================================================================================
 
 .PHONY: console-integration-test-latest
 console-integration-test-latest:			## Run console integration test on the latest Instill Core
-	@make latest PROFILE=all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway
+	@make latest PROJECT=core EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
@@ -291,7 +346,7 @@ console-integration-test-latest:			## Run console integration test on the latest
 
 .PHONY: console-integration-test-release
 console-integration-test-release:			## Run console integration test on the release Instill Core
-	@make all EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway
+	@make all PROJECT=core EDITION=local-ce:test CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \

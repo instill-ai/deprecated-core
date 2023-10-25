@@ -42,7 +42,7 @@ jobs:
 
       - name: Launch Instill Core (release)
         run: |
-          make all EDITION=local-ce:test
+          make all BUILD=true PROJECT=core EDITION=local-ce:test
 
       - name: List all docker containers
         run: |
