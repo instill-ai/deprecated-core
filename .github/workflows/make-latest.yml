@@ -41,7 +41,7 @@ jobs:
 
       - name: Launch Instill Core (latest)
         run: |
-          make latest PROFILE=all EDITION=local-ce:test
+          make latest BUILD=true PROJECT=core EDITION=local-ce:test
 
       - name: List all docker containers
         run: |
