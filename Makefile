@@ -84,21 +84,12 @@ all:			## Launch all services with their up-to-date release version
 
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
-	@if [ "${BUILD}" = "true" ]; then make build-latest; fi
+	@make build-latest
 	@if [ ! -f "$$(echo ${SYSTEM_CONFIG_PATH}/user_uid)" ]; then \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
 		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
 	fi
 	@COMPOSE_PROFILES=${PROFILE} EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
-	@if [ ! "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:latest --format='yes' 2> /dev/null)" = "yes" ]; then \
-		docker build --progress plain \
-			--build-arg ALPINE_VERSION=${ALPINE_VERSION} \
-			--build-arg GOLANG_VERSION=${GOLANG_VERSION} \
-			--build-arg K6_VERSION=${K6_VERSION} \
-			--build-arg CACHE_DATE="$(shell date)" \
-			--target latest \
-			-t ${CONTAINER_COMPOSE_IMAGE_NAME}:latest .; \
-	fi
 	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "vdp" ]; then \
 		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
 		export SYSTEM_CONFIG_PATH=$(shell eval echo ${SYSTEM_CONFIG_PATH}) && \
