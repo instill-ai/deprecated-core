@@ -28,7 +28,7 @@ HELM_RELEASE_NAME := core
 .PHONY: all
 all:			## Launch all services with their up-to-date release version
 	@if [ "${BUILD}" = "true" ]; then make build-release; fi
-	@if [ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ]; then \
+	@if [ ! -f "$$(echo ${SYSTEM_CONFIG_PATH}/user_uid)" ]; then \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
 		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
 	fi
@@ -71,7 +71,7 @@ all:			## Launch all services with their up-to-date release version
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
 	@if [ "${BUILD}" = "true" ]; then make build-latest; fi
-	@if [ ! -f "${SYSTEM_CONFIG_PATH}/user_uid" ]; then \
+	@if [ ! -f "$$(echo ${SYSTEM_CONFIG_PATH}/user_uid)" ]; then \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
 		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
 	fi
