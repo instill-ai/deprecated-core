@@ -30,7 +30,7 @@ all:			## Launch all services with their up-to-date release version
 	@if [ "${BUILD}" = "true" ]; then make build-release; fi
 	@if [ ! -f "$$(echo ${SYSTEM_CONFIG_PATH}/user_uid)" ]; then \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
-		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
+		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
 	fi
 	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
 	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "vdp" ]; then \
@@ -43,7 +43,7 @@ all:			## Launch all services with their up-to-date release version
 			-e BUILD=${BUILD} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
 			--name ${CONTAINER_COMPOSE_NAME}-release \
-			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
 				cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
 				cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 				/bin/sh -c 'cd /instill-ai/vdp && make all BUILD=${BUILD} EDITION=$${EDITION:=local-ce} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
@@ -59,8 +59,8 @@ all:			## Launch all services with their up-to-date release version
 			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
 			-e BUILD=${BUILD} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
-			--name ${CONTAINER_COMPOSE_NAME}-latest \
-			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
+			--name ${CONTAINER_COMPOSE_NAME}-release \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
 				cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
 				cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 				/bin/sh -c 'cd /instill-ai/model && make all BUILD=${BUILD} EDITION=$${EDITION:=local-ce} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
