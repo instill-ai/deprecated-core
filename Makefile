@@ -13,6 +13,8 @@ endif
 
 UNAME_S := $(shell uname -s)
 
+INSTILL_CORE_VERSION := $(shell git tag --sort=committerdate | grep -E '[0-9]' | tail -1 | cut -b 2-)
+
 CONTAINER_BUILD_NAME := core-build
 CONTAINER_COMPOSE_NAME := core-dind
 CONTAINER_COMPOSE_IMAGE_NAME := instill/core-compose
@@ -30,10 +32,10 @@ all:			## Launch all services with their up-to-date release version
 	@if [ "${BUILD}" = "true" ]; then make build-release; fi
 	@if [ ! -f "$$(echo ${SYSTEM_CONFIG_PATH}/user_uid)" ]; then \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
-		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
+		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
 	fi
 	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
-	@if [ ! "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:release --format='yes' 2> /dev/null)" = "yes" ]; then \
+	@if [ ! "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} --format='yes' 2> /dev/null)" = "yes" ]; then \
 		docker build --progress plain \
 			--build-arg ALPINE_VERSION=${ALPINE_VERSION} \
 			--build-arg GOLANG_VERSION=${GOLANG_VERSION} \
@@ -45,7 +47,7 @@ all:			## Launch all services with their up-to-date release version
 			--build-arg MGMT_BACKEND_VERSION=${MGMT_BACKEND_VERSION} \
 			--build-arg CONSOLE_VERSION=${CONSOLE_VERSION} \
 			--target release \
-			-t ${CONTAINER_COMPOSE_IMAGE_NAME}:release .; \
+			-t ${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} .; \
 	fi
 	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "vdp" ]; then \
 		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
@@ -57,7 +59,7 @@ all:			## Launch all services with their up-to-date release version
 			-e BUILD=${BUILD} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
 			--name ${CONTAINER_COMPOSE_NAME}-release \
-			${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
 				cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
 				cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 				/bin/sh -c 'cd /instill-ai/vdp && make all BUILD=${BUILD} EDITION=$${EDITION:=local-ce} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
@@ -74,7 +76,7 @@ all:			## Launch all services with their up-to-date release version
 			-e BUILD=${BUILD} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
 			--name ${CONTAINER_COMPOSE_NAME}-release \
-			${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
 				cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
 				cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
 				/bin/sh -c 'cd /instill-ai/model && make all BUILD=${BUILD} EDITION=$${EDITION:=local-ce} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
@@ -165,11 +167,11 @@ down:			## Stop all services and remove all service containers and volumes
 				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' vdp-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/vdp && make down; fi' && \
 				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' model-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/model && make down; fi' \
 			"; \
-	elif [ "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:release --format='yes' 2> /dev/null)" = "yes" ]; then \
+	elif [ "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} --format='yes' 2> /dev/null)" = "yes" ]; then \
 		docker run --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			--name ${CONTAINER_COMPOSE_NAME} \
-			${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
+			${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
 				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' vdp-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/vdp && make down; fi' && \
 				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' model-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/model && make down; fi' \
 			"; \
@@ -226,13 +228,13 @@ build-release:				## Build release images for all Instill Core components
 		--build-arg MGMT_BACKEND_VERSION=${MGMT_BACKEND_VERSION} \
 		--build-arg CONSOLE_VERSION=${CONSOLE_VERSION} \
 		--target release \
-		-t ${CONTAINER_COMPOSE_IMAGE_NAME}:release .
+		-t ${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} .
 	@docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v ${BUILD_CONFIG_DIR_PATH}/.env:/instill-ai/core/.env \
 		-v ${BUILD_CONFIG_DIR_PATH}/docker-compose.build.yml:/instill-ai/core/docker-compose.build.yml \
 		--name ${CONTAINER_BUILD_NAME}-release \
-		${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
+		${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
 			API_GATEWAY_VERSION=${API_GATEWAY_VERSION} \
 			MGMT_BACKEND_VERSION=${MGMT_BACKEND_VERSION} \
 			CONSOLE_VERSION=${CONSOLE_VERSION} \
@@ -256,7 +258,7 @@ integration-test-release:			## Run integration test on the release Instill Core
 	@docker run --rm \
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-release \
-		${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
+		${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
 			/bin/sh -c 'cd mgmt-backend && make integration-test API_GATEWAY_URL=${API_GATEWAY_HOST}:${API_GATEWAY_PORT}' \
 		"
 	@make down
@@ -302,11 +304,11 @@ helm-integration-test-release:                       ## Run integration test on 
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
 ifeq ($(UNAME_S),Darwin)
-	@docker run --rm -p ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
+	@docker run --rm -p ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
 			/bin/sh -c 'cd mgmt-backend && make integration-test API_GATEWAY_URL=host.docker.internal:${API_GATEWAY_PORT}' \
 		"
 else ifeq ($(UNAME_S),Linux)
-	@docker run --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:release /bin/sh -c " \
+	@docker run --rm --network host --name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-helm-release ${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
 			/bin/sh -c 'cd mgmt-backend && make integration-test API_GATEWAY_URL=localhost:${API_GATEWAY_PORT}' \
 		"
 endif
