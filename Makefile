@@ -33,6 +33,20 @@ all:			## Launch all services with their up-to-date release version
 		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:release uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
 	fi
 	@EDITION=$${EDITION:=local-ce} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} up -d --quiet-pull
+	@if [ ! "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:release --format='yes' 2> /dev/null)" = "yes" ]; then \
+		docker build --progress plain \
+			--build-arg ALPINE_VERSION=${ALPINE_VERSION} \
+			--build-arg GOLANG_VERSION=${GOLANG_VERSION} \
+			--build-arg K6_VERSION=${K6_VERSION} \
+			--build-arg CACHE_DATE="$(shell date)" \
+			--build-arg INSTILL_VDP_VERSION=${INSTILL_VDP_VERSION} \
+			--build-arg INSTILL_MODEL_VERSION=${INSTILL_MODEL_VERSION} \
+			--build-arg API_GATEWAY_VERSION=${API_GATEWAY_VERSION} \
+			--build-arg MGMT_BACKEND_VERSION=${MGMT_BACKEND_VERSION} \
+			--build-arg CONSOLE_VERSION=${CONSOLE_VERSION} \
+			--target release \
+			-t ${CONTAINER_COMPOSE_IMAGE_NAME}:release .; \
+	fi
 	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "vdp" ]; then \
 		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
 		export SYSTEM_CONFIG_PATH=$(shell eval echo ${SYSTEM_CONFIG_PATH}) && \
@@ -76,6 +90,15 @@ latest:			## Lunch all dependent services with their latest codebase
 		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
 	fi
 	@COMPOSE_PROFILES=${PROFILE} EDITION=$${EDITION:=local-ce:latest} DEFAULT_USER_UID=$$(cat ${SYSTEM_CONFIG_PATH}/user_uid) docker compose ${COMPOSE_FILES} -f docker-compose.latest.yml up -d --quiet-pull
+	@if [ ! "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:latest --format='yes' 2> /dev/null)" = "yes" ]; then \
+		docker build --progress plain \
+			--build-arg ALPINE_VERSION=${ALPINE_VERSION} \
+			--build-arg GOLANG_VERSION=${GOLANG_VERSION} \
+			--build-arg K6_VERSION=${K6_VERSION} \
+			--build-arg CACHE_DATE="$(shell date)" \
+			--target latest \
+			-t ${CONTAINER_COMPOSE_IMAGE_NAME}:latest .; \
+	fi
 	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "vdp" ]; then \
 		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
 		export SYSTEM_CONFIG_PATH=$(shell eval echo ${SYSTEM_CONFIG_PATH}) && \
@@ -143,7 +166,7 @@ down:			## Stop all services and remove all service containers and volumes
 	@docker rm -f ${CONTAINER_CONSOLE_INTEGRATION_TEST_NAME}-helm-release >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_COMPOSE_NAME}-latest >/dev/null 2>&1
 	@docker rm -f ${CONTAINER_COMPOSE_NAME}-release >/dev/null 2>&1
-	@if [ "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:latest --format='yes')" = "yes" ]; then \
+	@if [ "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:latest --format='yes' 2> /dev/null)" = "yes" ]; then \
 		docker run --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			--name ${CONTAINER_COMPOSE_NAME} \
@@ -151,7 +174,7 @@ down:			## Stop all services and remove all service containers and volumes
 				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' vdp-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/vdp && make down; fi' && \
 				/bin/sh -c 'if [ \"$$( docker container inspect -f '{{.State.Status}}' model-dind 2>/dev/null)\" != \"running\" ]; then cd /instill-ai/model && make down; fi' \
 			"; \
-	elif [ "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:release --format='yes')" = "yes" ]; then \
+	elif [ "$$(docker image inspect ${CONTAINER_COMPOSE_IMAGE_NAME}:release --format='yes' 2> /dev/null)" = "yes" ]; then \
 		docker run --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			--name ${CONTAINER_COMPOSE_NAME} \
