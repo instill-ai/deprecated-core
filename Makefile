@@ -13,6 +13,13 @@ endif
 
 UNAME_S := $(shell uname -s)
 
+# ray container platform for integration-test
+ifeq ($(shell uname -p),arm)
+	RAY_PLATFORM := arm
+else
+	RAY_PLATFORM := cpu
+endif
+
 INSTILL_CORE_VERSION := $(shell git tag --sort=committerdate | grep -E '[0-9]' | tail -1 | cut -b 2-)
 
 CONTAINER_BUILD_NAME := core-build
@@ -69,19 +76,17 @@ all:			## Launch all services with their up-to-date release version
 	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "model" ]; then \
 		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
 		export SYSTEM_CONFIG_PATH=$(shell eval echo ${SYSTEM_CONFIG_PATH}) && \
-		export RAY_PLATFORM=$(shell uname -p) && \
 		docker run --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
 			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
 			-e BUILD=${BUILD} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
-			-e RAY_PLATFORM=$${RAY_PLATFORM} \
 			--name ${CONTAINER_COMPOSE_NAME}-release \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
 				cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
 				cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
-				/bin/sh -c 'cd /instill-ai/model && make all BUILD=${BUILD} EDITION=$${EDITION:=local-ce} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH} RAY_PLATFORM=$${RAY_PLATFORM}' && \
+				/bin/sh -c 'cd /instill-ai/model && make all BUILD=${BUILD} EDITION=$${EDITION:=local-ce} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
 				/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}; \
 	fi
@@ -115,7 +120,6 @@ latest:			## Lunch all dependent services with their latest codebase
 	@if [ "${PROJECT}" = "all" ] || [ "${PROJECT}" = "model" ]; then \
 		export TMP_CONFIG_DIR=$(shell mktemp -d) && \
 		export SYSTEM_CONFIG_PATH=$(shell eval echo ${SYSTEM_CONFIG_PATH}) && \
-		export RAY_PLATFORM=$(shell uname -p) && \
 		docker run --rm \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
@@ -123,12 +127,11 @@ latest:			## Lunch all dependent services with their latest codebase
 			-e BUILD=${BUILD} \
 			-e PROFILE=${PROFILE} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
-			-e RAY_PLATFORM=$${RAY_PLATFORM} \
 			--name ${CONTAINER_COMPOSE_NAME}-latest \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
 				cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
 				cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
-				/bin/sh -c 'cd /instill-ai/model && make latest BUILD=${BUILD} PROFILE=$${PROFILE} EDITION=$${EDITION:=local-ce:latest} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH} RAY_PLATFORM=$${RAY_PLATFORM}' && \
+				/bin/sh -c 'cd /instill-ai/model && make latest BUILD=${BUILD} PROFILE=$${PROFILE} EDITION=$${EDITION:=local-ce:latest} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
 				/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}; \
 	fi
@@ -339,7 +342,7 @@ console-integration-test-latest:			## Run console integration test on the latest
 			/bin/sh -c 'cd /instill-ai/vdp && COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull' && \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
-	@export TMP_CONFIG_DIR=$(shell mktemp -d) && export RAY_PLATFORM=$(shell uname -p) && docker run --rm \
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && export RAY_PLATFORM=${RAY_PLATFORM} && docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
 		-e RAY_PLATFORM:$${RAY_PLATFORM} \
@@ -379,7 +382,7 @@ console-integration-test-release:			## Run console integration test on the relea
 			/bin/sh -c 'cd /instill-ai/vdp && COMPOSE_PROFILES=all EDITION=local-ce:test docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull' && \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
-	@export TMP_CONFIG_DIR=$(shell mktemp -d) && export RAY_PLATFORM=$(shell uname -p) && docker run --rm \
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && export RAY_PLATFORM=${RAY_PLATFORM} && docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
 		-e RAY_PLATFORM:$${RAY_PLATFORM} \
@@ -457,7 +460,7 @@ endif
 					--set controllerVDP.image.tag=latest' \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
-	@export TMP_CONFIG_DIR=$(shell mktemp -d) && export RAY_PLATFORM=$(shell uname -p) && docker run --rm \
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && export RAY_PLATFORM=${RAY_PLATFORM} && docker run --rm \
 		-v ${HOME}/.kube/config:/root/.kube/config \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
@@ -562,7 +565,7 @@ endif
 					--set controllerVDP.image.tag=latest' \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
-	@export TMP_CONFIG_DIR=$(shell mktemp -d) && export RAY_PLATFORM=$(shell uname -p) && docker run --rm \
+	@export TMP_CONFIG_DIR=$(shell mktemp -d) && export RAY_PLATFORM=${RAY_PLATFORM} && docker run --rm \
 		-v ${HOME}/.kube/config:/root/.kube/config \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
