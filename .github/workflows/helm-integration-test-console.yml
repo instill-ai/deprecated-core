@@ -111,7 +111,8 @@ jobs:
             --set edition=k8s-ce:test \
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
-            --set itMode.enabled=true
+            --set itMode.enabled=true \
+            --set ray.platform=cpu
 
       - name: Run console integration test (latest)
         run: |
@@ -288,7 +289,8 @@ jobs:
             --set edition=k8s-ce:test \
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
-            --set itMode.enabled=true
+            --set itMode.enabled=true \
+            --set ray.platform=arm
 
       - name: Run console integration test (latest)
         run: |
@@ -426,7 +428,8 @@ jobs:
             --set edition=k8s-ce:test \
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
-            --set itMode.enabled=true
+            --set itMode.enabled=true \
+            --set ray.platform=cpu
 
       - name: Run console integration test (release)
         run: |
@@ -603,7 +606,8 @@ jobs:
             --set edition=k8s-ce:test \
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
-            --set itMode.enabled=true
+            --set itMode.enabled=true \
+            --set ray.platform=arm
 
       - name: Run console integration test (release)
         run: |
