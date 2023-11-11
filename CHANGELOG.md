@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1-alpha](https://github.com/instill-ai/core/compare/v0.5.0-alpha...v0.5.1-alpha) (2023-11-11)
+
+
+### Miscellaneous Chores
+
+* release v0.5.1-alpha ([1cca3cb](https://github.com/instill-ai/core/commit/1cca3cb8d6e65bf791838512f50864e72d776009))
+
 ## [0.5.0-alpha](https://github.com/instill-ai/core/compare/v0.4.1-alpha...v0.5.0-alpha) (2023-10-27)
 
 
