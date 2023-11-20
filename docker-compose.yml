@@ -221,3 +221,38 @@ services:
       - ${OBSERVE_CONFIG_DIR_PATH}/influxdb:/docker-entrypoint-initdb.d
     ports:
       - ${INFLUXDB_PORT}:8086
+
+  openfga_createdb:
+    depends_on:
+      pg_sql:
+        condition: service_healthy
+    image: ${POSTGRESQL_IMAGE}:${POSTGRESQL_VERSION}-alpine
+    container_name: ${OPENFGA_HOST}_createdb
+    command: createdb -h ${POSTGRESQL_HOST} -U postgres -w openfga
+    environment:
+       PGPASSWORD: password
+    
+  
+  openfga_migrate:
+    depends_on:
+      openfga_createdb:
+        condition: service_completed_successfully
+    image: ${OPENFGA_IMAGE}:${OPENFGA_VERSION}
+    container_name: ${OPENFGA_HOST}_migrate
+    command: migrate
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgres://postgres:password@${POSTGRESQL_HOST}:${POSTGRESQL_PORT}/openfga?sslmode=disable
+      
+  openfga:
+    depends_on:
+      openfga_migrate:
+        condition: service_completed_successfully
+    container_name: ${OPENFGA_HOST}
+    image: ${OPENFGA_IMAGE}:${OPENFGA_VERSION}
+    restart: unless-stopped
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgres://postgres:password@${POSTGRESQL_HOST}:${POSTGRESQL_PORT}/openfga?sslmode=disable
+    command: run
+

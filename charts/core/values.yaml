@@ -251,6 +251,57 @@ apiGateway:
     spec:
       minAvailable:
       maxUnavailable:
+openfga:
+  image:
+    repository: openfga/openfga
+    tag: v1.3.7
+    pullPolicy: IfNotPresent
+  # -- Set the service account to be used, default if left empty
+  serviceAccountName: ""
+  # -- Mount the service account token
+  automountServiceAccountToken: false
+  # -- The number of replica for mgmt-backend
+  replicaCount: 1
+  # -- Add extra env variables
+  extraEnv: []
+  # -- Mount external volumes
+  # For example, mount a secret containing Certificate root CA to verify database
+  # TLS connection.
+  extraVolumes: []
+  # - name: my-volume
+  #   secret:
+  #     secretName: my-secret
+  extraVolumeMounts: []
+  # - name: my-volume
+  #   mountPath: /etc/secrets/my-secret
+  #   readOnly: true
+  # -- Add extra init containers
+  extraInitContainers: []
+  # extraInitContainers:
+  #  - name: ...
+  #    image: ...
+  # -- Add extra sidecar containers
+  sidecarContainers: {}
+  # -- Additional deployment annotations
+  podAnnotations: {}
+  # -- Additional service annotations
+  serviceAnnotations: {}
+  # -- The pod resource
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  autoscaling:
+    enabled: false
+    minReplicas:
+    maxReplicas:
+    targetCPUUtilizationPercentage:
+    targetAverageMemoryUtilization:
+  podDisruptionBudget:
+    enabled: false
+    spec:
+      minAvailable:
+      maxUnavailable:
 mgmtBackend:
   # -- The image of mgmt-backend
   image:
@@ -265,7 +316,7 @@ mgmtBackend:
   # -- The path of configuration file for mgmt-backend
   configPath: /mgmt-backend/config/config.yaml
   # -- The database migration version
-  dbVersion: 2
+  dbVersion: 3
   # -- Set the service account to be used, default if left empty
   serviceAccountName: ""
   # -- Mount the service account token

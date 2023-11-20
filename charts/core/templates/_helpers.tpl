@@ -128,6 +128,10 @@ app.kubernetes.io/name: {{ include "core.name" . }}
   {{- printf "%s-mgmt-backend" (include "core.fullname" .) -}}
 {{- end -}}
 
+{{- define "core.openfga" -}}
+  {{- printf "%s-openfga" (include "core.fullname" .) -}}
+{{- end -}}
+
 {{- define "core.console" -}}
   {{- printf "%s-console" (include "core.fullname" .) -}}
 {{- end -}}
