@@ -67,6 +67,8 @@ spec:
               value: openfga
             - name: PGHOST
               value: "{{ default (include "core.database.host" .) .Values.database.external.host }}"
+            - name: PGPORT
+              value: "{{ default (include "core.database.port" .) .Values.database.external.port }}"
             - name: PGUSER
               value: "{{ default (include "core.database.username" .) .Values.database.external.username }}"
             - name: PGPASSWORD
