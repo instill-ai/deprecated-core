@@ -228,7 +228,7 @@ services:
         condition: service_healthy
     image: ${POSTGRESQL_IMAGE}:${POSTGRESQL_VERSION}-alpine
     container_name: ${OPENFGA_HOST}_createdb
-    command: createdb -h ${POSTGRESQL_HOST} -U postgres -w openfga
+    command: bash -c 'createdb -h ${POSTGRESQL_HOST} -U postgres -w openfga || true'
     environment:
        PGPASSWORD: password
     
