@@ -84,7 +84,9 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
           env:
-            - name: NEXT_PUBLIC_API_VERSION
+            - name: NEXT_PUBLIC_GENERAL_API_VERSION
+              value: "v1beta"
+            - name: NEXT_PUBLIC_MODEL_API_VERSION
               value: "v1alpha"
             - name: NEXT_PUBLIC_USAGE_COLLECTION_ENABLED
               value: "{{ .Values.usage.enabled }}"
