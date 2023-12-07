@@ -51,7 +51,6 @@ jobs:
 
       - name: Launch Instill Core (latest)
         run: |
-          CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway \
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
           docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
@@ -188,7 +187,6 @@ jobs:
 
       - name: Launch Instill Core (latest)
         run: |
-          CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway \
           COMPOSE_PROFILES=all \
           EDITION=local-ce:test \
           docker compose -f docker-compose.yml -f docker-compose.latest.yml up -d --quiet-pull
@@ -344,7 +342,6 @@ jobs:
 
       - name: Launch Instill Core (release)
         run: |
-          CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway \
           EDITION=local-ce:test \
           docker compose up -d --quiet-pull
           EDITION=local-ce:test \
@@ -480,7 +477,6 @@ jobs:
 
       - name: Launch Instill Core (release)
         run: |
-          CONSOLE_PUBLIC_API_GATEWAY_HOST=api-gateway \
           EDITION=local-ce:test \
           docker compose up -d --quiet-pull
           EDITION=local-ce:test \
