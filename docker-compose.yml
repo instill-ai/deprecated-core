@@ -103,8 +103,8 @@ services:
       NEXT_PUBLIC_API_VERSION: v1alpha
       NEXT_PUBLIC_USAGE_COLLECTION_ENABLED: ${USAGE_ENABLED}
       NEXT_PUBLIC_CONSOLE_EDITION: ${EDITION}
-      NEXT_PUBLIC_CONSOLE_BASE_URL: http://${CONSOLE_URL_HOST}:${CONSOLE_PORT}
-      NEXT_PUBLIC_API_GATEWAY_URL: http://${CONSOLE_PUBLIC_API_GATEWAY_HOST}:${API_GATEWAY_PORT}
+      NEXT_PUBLIC_CONSOLE_BASE_URL: http://${INSTILL_CORE_HOST}:${CONSOLE_PORT}
+      NEXT_PUBLIC_API_GATEWAY_URL: http://${INSTILL_CORE_HOST}:${API_GATEWAY_PORT}
       NEXT_SERVER_API_GATEWAY_URL: http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT}
       NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME: instill-ai-user
       NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION: "false"
@@ -230,9 +230,8 @@ services:
     container_name: ${OPENFGA_HOST}_createdb
     command: bash -c 'createdb -h ${POSTGRESQL_HOST} -U postgres -w openfga || true'
     environment:
-       PGPASSWORD: password
-    
-  
+      PGPASSWORD: password
+
   openfga_migrate:
     depends_on:
       openfga_createdb:
@@ -243,7 +242,7 @@ services:
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:password@${POSTGRESQL_HOST}:${POSTGRESQL_PORT}/openfga?sslmode=disable
-      
+
   openfga:
     depends_on:
       openfga_migrate:
@@ -255,4 +254,3 @@ services:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:password@${POSTGRESQL_HOST}:${POSTGRESQL_PORT}/openfga?sslmode=disable
     command: run
-
