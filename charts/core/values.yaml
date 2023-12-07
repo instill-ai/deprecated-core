@@ -316,7 +316,7 @@ mgmtBackend:
   # -- The path of configuration file for mgmt-backend
   configPath: /mgmt-backend/config/config.yaml
   # -- The database migration version
-  dbVersion: 3
+  dbVersion: 4
   # -- Set the service account to be used, default if left empty
   serviceAccountName: ""
   # -- Mount the service account token
