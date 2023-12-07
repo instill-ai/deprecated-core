@@ -119,7 +119,8 @@ jobs:
           git clone https://github.com/instill-ai/console.git
           cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:latest .
           docker run -t --rm \
-            -e NEXT_PUBLIC_API_VERSION=v1alpha \
+            -e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+            -e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
             -e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
             -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
             -e NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
@@ -297,7 +298,8 @@ jobs:
           git clone https://github.com/instill-ai/console.git
           cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:latest .
           docker run -t --rm \
-            -e NEXT_PUBLIC_API_VERSION=v1alpha \
+            -e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+            -e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
             -e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
             -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
             -e NEXT_PUBLIC_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
@@ -436,7 +438,8 @@ jobs:
           git clone -b v$CONSOLE_VERSION https://github.com/instill-ai/console.git
           cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:${{ env.CONSOLE_VERSION }} .
           docker run -t --rm \
-            -e NEXT_PUBLIC_API_VERSION=v1alpha \
+            -e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+            -e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
             -e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
             -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
             -e NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
@@ -614,7 +617,8 @@ jobs:
           git clone -b v$CONSOLE_VERSION https://github.com/instill-ai/console.git
           cd console && docker build --build-arg TEST_USER='root' -f Dockerfile.playwright -t console-playwright:${{ env.CONSOLE_VERSION }} .
           docker run -t --rm \
-            -e NEXT_PUBLIC_API_VERSION=v1alpha \
+            -e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+            -e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
             -e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
             -e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
             -e NEXT_PUBLIC_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \

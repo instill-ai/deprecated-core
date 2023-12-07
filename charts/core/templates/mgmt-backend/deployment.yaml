@@ -93,14 +93,14 @@ spec:
           imagePullPolicy: {{ .Values.mgmtBackend.image.pullPolicy }}
           readinessProbe:
             httpGet:
-              path: /v1alpha/__readiness
+              path: /v1beta/__readiness
               scheme: {{ ternary "https" "http" .Values.internalTLS.enabled | upper }}
               port: {{ ternary "https" "http" .Values.internalTLS.enabled }}-public
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /v1alpha/__liveness
+              path: /v1beta/__liveness
               scheme: {{ ternary "https" "http" .Values.internalTLS.enabled | upper }}
               port: {{ ternary "https" "http" .Values.internalTLS.enabled }}-public
             initialDelaySeconds: 5
