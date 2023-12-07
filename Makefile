@@ -355,7 +355,8 @@ console-integration-test-latest:			## Run console integration test on the latest
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
 	@docker run --rm \
-		-e NEXT_PUBLIC_API_VERSION=v1alpha \
+		-e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+		-e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://${CONSOLE_HOST}:${CONSOLE_PORT} \
 		-e NEXT_PUBLIC_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
@@ -395,7 +396,8 @@ console-integration-test-release:			## Run console integration test on the relea
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
 	@docker run --rm \
-		-e NEXT_PUBLIC_API_VERSION=v1alpha \
+		-e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+		-e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=local-ce:test \
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://${CONSOLE_HOST}:${CONSOLE_PORT} \
 		-e NEXT_PUBLIC_API_GATEWAY_URL=http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT} \
@@ -485,7 +487,8 @@ ifeq ($(UNAME_S),Darwin)
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
 		-e NEXT_PUBLIC_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		-e NEXT_SERVER_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_API_VERSION=v1alpha \
+		-e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+		-e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
@@ -497,7 +500,8 @@ else ifeq ($(UNAME_S),Linux)
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
 		-e NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
 		-e NEXT_SERVER_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_API_VERSION=v1alpha \
+		-e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+		-e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
@@ -590,7 +594,8 @@ ifeq ($(UNAME_S),Darwin)
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://host.docker.internal:${CONSOLE_PORT} \
 		-e NEXT_PUBLIC_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
 		-e NEXT_SERVER_API_GATEWAY_URL=http://host.docker.internal:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_API_VERSION=v1alpha \
+		-e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+		-e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
@@ -602,7 +607,8 @@ else ifeq ($(UNAME_S),Linux)
 		-e NEXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:${CONSOLE_PORT} \
 		-e NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
 		-e NEXT_SERVER_API_GATEWAY_URL=http://localhost:${API_GATEWAY_PORT} \
-		-e NEXT_PUBLIC_API_VERSION=v1alpha \
+		-e NEXT_PUBLIC_GENERAL_API_VERSION=v1beta \
+		-e NEXT_PUBLIC_MODEL_API_VERSION=v1alpha \
 		-e NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION=false \
 		-e NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME=instill-ai-user \
 		-e NEXT_PUBLIC_CONSOLE_EDITION=k8s-ce:test \
