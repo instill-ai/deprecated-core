@@ -68,3 +68,10 @@ data:
     openfga:
       host: {{ template "core.openfga" . }}
       port: 8080
+    temporal:
+      hostport: {{ default (printf "%s-frontend-headless:%s" (include "core.temporal" .) (include "core.temporal.frontend.grpcPort" .)) .Values.mgmtBackend.temporal.hostPort }}
+      namespace: {{ default "mgmt-backend" .Values.mgmtBackend.temporal.namespace }}
+      ca: {{ default "" .Values.mgmtBackend.temporal.ca }}
+      cert: {{ default "" .Values.mgmtBackend.temporal.cert }}
+      key: {{ default "" .Values.mgmtBackend.temporal.key }}
+      serverName: {{ default "" .Values.mgmtBackend.temporal.serverName }}
