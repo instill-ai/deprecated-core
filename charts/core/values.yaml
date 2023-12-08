@@ -313,6 +313,7 @@ mgmtBackend:
     migration: mgmt-backend-migrate
     init: mgmt-backend-init
     main: mgmt-backend
+    worker: mgmt-backend-worker
   # -- The path of configuration file for mgmt-backend
   configPath: /mgmt-backend/config/config.yaml
   # -- The database migration version
@@ -363,6 +364,14 @@ mgmtBackend:
     spec:
       minAvailable:
       maxUnavailable:
+  # -- The configuration of Temporal Cloud
+  temporal:
+    hostPort:
+    namespace:
+    ca:
+    cert:
+    key:
+    serverName:
 console:
   # -- Enable console deployment or not
   enabled: true
