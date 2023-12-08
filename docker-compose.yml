@@ -111,7 +111,7 @@ services:
       NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION: "false"
       NODE_ENV: production
     ports:
-      - ${CONSOLE_PORT}:${CONSOLE_PORT}
+      - ${CONSOLE_PORT}:3000
     entrypoint: ./entrypoint.sh
 
   pg_sql:
