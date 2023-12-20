@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1-beta](https://github.com/instill-ai/core/compare/v0.8.0-beta...v0.8.1-beta) (2023-12-20)
+
+
+### Miscellaneous Chores
+
+* release v0.8.1-beta ([e98533a](https://github.com/instill-ai/core/commit/e98533a692413caa255b550136e405113b81f771))
+
 ## [0.8.0-beta](https://github.com/instill-ai/core/compare/v0.7.0-alpha...v0.8.0-beta) (2023-12-15)
 
 
