@@ -90,14 +90,14 @@ spec:
               path: /__health
               scheme: {{ upper (ternary "https" "http" .Values.apiGateway.tls.enabled) }}
               port: {{ ternary "https" "http" .Values.apiGateway.tls.enabled }}
-            initialDelaySeconds: 5
+            initialDelaySeconds: 60
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /__health
               scheme: {{ upper (ternary "https" "http" .Values.apiGateway.tls.enabled) }}
               port: {{ ternary "https" "http" .Values.apiGateway.tls.enabled }}
-            initialDelaySeconds: 5
+            initialDelaySeconds: 60
             periodSeconds: 10
           {{- if .Values.apiGateway.resources }}
           resources:
