@@ -91,8 +91,7 @@ jobs:
           helm install vdp charts/vdp --namespace instill-ai --create-namespace \
             --set edition=k8s-ce:test \
             --set pipelineBackend.image.tag=latest \
-            --set connectorBackend.image.tag=latest \
-            --set connectorBackend.excludelocalconnector=false \
+            --set pipelineBackend.excludelocalconnector=false \
             --set controllerVDP.image.tag=latest
 
       - name: Checkout repo (model)
@@ -272,8 +271,7 @@ jobs:
           helm install vdp charts/vdp --namespace instill-ai --create-namespace \
             --set edition=k8s-ce:test \
             --set pipelineBackend.image.tag=latest \
-            --set connectorBackend.image.tag=latest \
-            --set connectorBackend.excludelocalconnector=false \
+            --set pipelineBackend.excludelocalconnector=false \
             --set controllerVDP.image.tag=latest
 
       - name: Checkout repo (model)
@@ -412,8 +410,7 @@ jobs:
           helm install vdp charts/vdp --namespace instill-ai --create-namespace \
             --set edition=k8s-ce:test \
             --set pipelineBackend.image.tag=latest \
-            --set connectorBackend.image.tag=latest \
-            --set connectorBackend.excludelocalconnector=false \
+            --set pipelineBackend.excludelocalconnector=false \
             --set controllerVDP.image.tag=latest
 
       - name: Checkout repo (model)
@@ -593,8 +590,7 @@ jobs:
           helm install vdp charts/vdp --namespace instill-ai --create-namespace \
             --set edition=k8s-ce:test \
             --set pipelineBackend.image.tag=latest \
-            --set connectorBackend.image.tag=latest \
-            --set connectorBackend.excludelocalconnector=false \
+            --set pipelineBackend.excludelocalconnector=false \
             --set controllerVDP.image.tag=latest
 
       - name: Checkout repo (model)

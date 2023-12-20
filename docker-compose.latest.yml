@@ -7,7 +7,6 @@ services:
       - mgmt
       - console
       - pipeline
-      - connector
       - controller-vdp
       - model
       - controller-model
@@ -21,7 +20,6 @@ services:
       - api-gateway
       - console
       - pipeline
-      - connector
       - controller-vdp
       - model
       - controller-model
@@ -33,7 +31,6 @@ services:
       - api-gateway
       - console
       - pipeline
-      - connector
       - controller-vdp
       - model
       - controller-model
@@ -45,7 +42,6 @@ services:
       - api-gateway
       - console
       - pipeline
-      - connector
       - controller-vdp
       - model
       - controller-model
@@ -63,7 +59,6 @@ services:
       - api-gateway
       - console
       - pipeline
-      - connector
       - controller-vdp
       - model
       - controller-model
@@ -78,7 +73,6 @@ services:
       - api-gateway
       - mgmt
       - pipeline
-      - connector
       - controller-vdp
       - model
       - controller-model

@@ -457,8 +457,7 @@ endif
 				helm install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
 					--set edition=k8s-ce:test \
 					--set pipelineBackend.image.tag=latest \
-					--set connectorBackend.image.tag=latest \
-					--set connectorBackend.excludelocalconnector=false \
+					--set pipelineBackend.excludelocalconnector=false \
 					--set controllerVDP.image.tag=latest' \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}
@@ -564,8 +563,7 @@ endif
 				helm install vdp charts/vdp --namespace ${HELM_NAMESPACE} --create-namespace \
 					--set edition=k8s-ce:test \
 					--set pipelineBackend.image.tag=latest \
-					--set connectorBackend.image.tag=latest \
-					--set connectorBackend.excludelocalconnector=false \
+					--set pipelineBackend.excludelocalconnector=false \
 					--set controllerVDP.image.tag=latest' \
 			/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}

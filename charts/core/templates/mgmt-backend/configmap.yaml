@@ -19,14 +19,6 @@ data:
         cert: /etc/instill-ai/core/ssl/mgmt/tls.crt
         key: /etc/instill-ai/core/ssl/mgmt/tls.key
       {{- end }}
-    connectorbackend:
-      host: {{ template "vdp.connectorBackend" . }}
-      publicport: {{ template "vdp.connectorBackend.publicPort" . }}
-      {{- if .Values.internalTLS.enabled }}
-      https:
-        cert: /etc/instill-ai/vdp/ssl/connector/tls.crt
-        key: /etc/instill-ai/vdp/ssl/connector/tls.key
-      {{- end }}
     pipelinebackend:
       host: {{ template "vdp.pipelineBackend" . }}
       publicport: {{ template "vdp.pipelineBackend.publicPort" . }}

@@ -311,15 +311,6 @@ app.kubernetes.io/name: {{ include "core.name" . }}
   {{- print "8081" -}}
 {{- end -}}
 
-{{- define "vdp.connectorBackend" -}}
-  {{- print "vdp-connector-backend" -}}
-{{- end -}}
-
-{{/* connector service and container public port */}}
-{{- define "vdp.connectorBackend.publicPort" -}}
-  {{- print "8082" -}}
-{{- end -}}
-
 {{- define "model.modelBackend" -}}
   {{- printf "model-model-backend" -}}
 {{- end -}}
