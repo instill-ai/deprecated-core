@@ -36,8 +36,8 @@ spec:
         {{- end }}
     spec:
       securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
+        runAsUser: 65534
+        runAsGroup: 65534
       {{- if .Values.apiGateway.serviceAccountName }}
       serviceAccountName: {{ .Values.apiGateway.serviceAccountName }}
       {{- end }}
