@@ -11,14 +11,14 @@ dependencies:
 - name: jaeger
   repository: https://jaegertracing.github.io/helm-charts
   version: 0.71.2
-- name: prometheus
-  repository: https://prometheus-community.github.io/helm-charts
-  version: 22.6.2
-- name: grafana
-  repository: https://grafana.github.io/helm-charts
-  version: 6.56.6
 - name: opentelemetry-collector
   repository: https://open-telemetry.github.io/opentelemetry-helm-charts
   version: 0.59.1
-digest: sha256:3c7a72d5470518ebdf5e3c053ff35843affc43a3c1c6a95a387ace894f1980de
-generated: "2023-05-30T23:41:01.588869+01:00"
+- name: kube-prometheus-stack
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 48.2.1
+- name: grafana
+  repository: https://grafana.github.io/helm-charts
+  version: 7.0.19
+digest: sha256:3122bd6072426cf42c39a298cfe70143a8ecd092fa642fe03f3085a1e34dc2af
+generated: "2023-12-29T04:21:42.410265+08:00"
