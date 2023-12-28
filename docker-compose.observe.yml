@@ -34,5 +34,6 @@ services:
       - ${OBSERVE_CONFIG_DIR_PATH}/grafana/datasources/all.yml:/etc/grafana/provisioning/datasources/all.yml
       - ${OBSERVE_CONFIG_DIR_PATH}/grafana/dashboards/all.yml:/etc/grafana/provisioning/dashboards/all.yml
       - ${OBSERVE_CONFIG_DIR_PATH}/grafana/krakend:/var/lib/grafana/dashboards/krakend
+      - ${OBSERVE_CONFIG_DIR_PATH}/grafana/ray:/var/lib/grafana/dashboards/ray
     ports:
       - ${GRAFANA_PORT}:3000

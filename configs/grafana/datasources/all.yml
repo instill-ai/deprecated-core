@@ -19,3 +19,7 @@ datasources:
       version: Flux
     secureJsonData:
       token: i-love-instill-ai
+  - name: Prometheus
+    url: http://prometheus:9090
+    type: prometheus
+    access: proxy
