@@ -39,13 +39,13 @@ dependencies:
     version: 0.59.1
     tags:
       - observability
-  - name: prometheus
+  - name: kube-prometheus-stack
     repository: https://prometheus-community.github.io/helm-charts
-    version: 22.6.2
+    version: 48.2.1
     tags:
       - prometheusStack
   - name: grafana
     repository: https://grafana.github.io/helm-charts
-    version: 6.56.6
+    version: 7.0.19
     tags:
       - prometheusStack

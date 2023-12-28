@@ -949,18 +949,19 @@ opentelemetry-collector:
             - batch
           exporters:
             - logging
-prometheus:
-  prometheus-node-exporter:
+kube-prometheus-stack:
+  nameOverride: core
+  fullnameOverride: core
+  alertmanager:
+    alertmanagerSpec:
+      podMetadata:
+        name: alertmanager
+  grafana:
     enabled: false
-  global:
-    evaluation_interval: 10s
-    scrape_interval: 5s
-  scrape_configs:
-    - job_name: "metric-collector"
-      static_configs:
-        - targets:
-            - "http://core-opentelemetry-collector:9001"
-            - "http://core-api-gateway:8071"
+  prometheus:
+    prometheusSpec:
+      podMetadata:
+        name: prometheus
 grafana:
   grafana.ini:
     security:
@@ -973,6 +974,8 @@ grafana:
     default:
       krakend-dashboard:
         url: https://grafana.com/api/dashboards/17074/revisions/1/download
+  dashboardsConfigMaps:
+    ray: "dashboards"
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
@@ -1011,6 +1014,10 @@ grafana:
             version: Flux
           secureJsonData:
             token: i-love-instill-ai
+        - name: Prometheus
+          url: http://core-prometheus:9090
+          type: prometheus
+          access: proxy
 tags:
   observability: true
   prometheusStack: false

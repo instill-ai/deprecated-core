@@ -160,6 +160,14 @@ app.kubernetes.io/name: {{ include "core.name" . }}
   {{- printf "%s-temporal-ui" (include "core.fullname" .) -}}
 {{- end -}}
 
+{{- define "kube-prometheus-stack.alertmanager.crname" -}}
+  {{- printf "alertmanager" -}}
+{{- end -}}
+
+{{- define "kube-prometheus-stack.prometheus.crname" -}}
+  {{- printf "prometheus" -}}
+{{- end -}}
+
 {{/* api-gateway project */}}
 {{- define "core.apiGateway.project" -}}
   {{- printf "core" -}}
