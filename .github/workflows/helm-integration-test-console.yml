@@ -111,7 +111,8 @@ jobs:
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
             --set itMode.enabled=true \
-            --set ray.platform=cpu
+            --set ray.platform=cpu \
+            --set tags.observability=false
 
       - name: Run console integration test (latest)
         run: |
@@ -133,7 +134,7 @@ jobs:
 
   helm-integration-test-latest-mac:
     if: false
-    # disable the mac test temporary 
+    # disable the mac test temporary
     # if: inputs.target == 'latest' && github.ref == 'refs/heads/main'
     runs-on: [self-hosted, macOS, core]
     timeout-minutes: 20
@@ -291,7 +292,8 @@ jobs:
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
             --set itMode.enabled=true \
-            --set ray.platform=arm
+            --set ray.platform=arm \
+            --set tags.observability=false
 
       - name: Run console integration test (latest)
         run: |
@@ -430,7 +432,8 @@ jobs:
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
             --set itMode.enabled=true \
-            --set ray.platform=cpu
+            --set ray.platform=cpu \
+            --set tags.observability=false
 
       - name: Run console integration test (release)
         run: |
@@ -610,7 +613,8 @@ jobs:
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
             --set itMode.enabled=true \
-            --set ray.platform=arm
+            --set ray.platform=arm \
+            --set tags.observability=false
 
       - name: Run console integration test (release)
         run: |
