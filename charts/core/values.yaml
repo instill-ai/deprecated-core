@@ -962,6 +962,12 @@ prometheus:
             - "http://core-opentelemetry-collector:9001"
             - "http://core-api-gateway:8071"
 grafana:
+  grafana.ini:
+    security:
+      allow_embedding: true
+    auth.anonymous:
+      enabled: true
+      org_role: Viewer
   adminPassword: password
   dashboards:
     default:
@@ -979,6 +985,11 @@ grafana:
           updateIntervalSeconds: 60
           options:
             path: /var/lib/grafana/dashboards/default
+        - name: "ray"
+          folder: Ray
+          type: file
+          options:
+            path: /var/lib/grafana/dashboards/ray
   datasources:
     datasources.yaml:
       apiVersion: 1
