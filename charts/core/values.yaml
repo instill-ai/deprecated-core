@@ -896,9 +896,9 @@ opentelemetry-collector:
       protocol: TCP
   config:
     receivers:
-      jaeger: null
-      prometheus: null
-      zipkin: null
+      jaeger: {}
+      prometheus: {}
+      zipkin: {}
       otlp:
         protocols:
           grpc:
@@ -911,7 +911,7 @@ opentelemetry-collector:
       batch:
         send_batch_size: 8192
     exporters:
-      logging: # aka, stdOut/stdErr
+      logging: {}  # aka, stdOut/stdErr
       jaeger:
         endpoint: core-jaeger-collector:14250
         tls:
