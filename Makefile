@@ -279,7 +279,7 @@ helm-integration-test-latest:                       ## Run integration test on t
 		--set mgmtBackend.image.tag=latest \
 		--set console.image.tag=latest \
 		--set tags.observability=false
-	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=300s
 	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
@@ -306,7 +306,7 @@ helm-integration-test-release:                       ## Run integration test on 
 		--set mgmtBackend.image.tag=${MGMT_BACKEND_VERSION} \
 		--set console.image.tag=${CONSOLE_VERSION} \
 		--set tags.observability=false
-	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=300s
 	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@while ! nc -vz localhost ${API_GATEWAY_PORT} > /dev/null 2>&1; do sleep 1; done
@@ -436,7 +436,7 @@ else ifeq ($(UNAME_S),Linux)
 		--set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
 		--set consoleURL=http://localhost:${CONSOLE_PORT}
 endif
-	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=300s
 	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@export CONSOLE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
@@ -542,7 +542,7 @@ else ifeq ($(UNAME_S),Linux)
 		--set console.serverApiGatewayURL=http://localhost:${API_GATEWAY_PORT} \
 		--set consoleURL=http://localhost:${CONSOLE_PORT}
 endif
-	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=120s
+	@kubectl rollout status deployment core-api-gateway --namespace ${HELM_NAMESPACE} --timeout=300s
 	@export API_GATEWAY_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=api-gateway,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
 		kubectl --namespace ${HELM_NAMESPACE} port-forward $${API_GATEWAY_POD_NAME} ${API_GATEWAY_PORT}:${API_GATEWAY_PORT} > /dev/null 2>&1 &
 	@export CONSOLE_POD_NAME=$$(kubectl get pods --namespace ${HELM_NAMESPACE} -l "app.kubernetes.io/component=console,app.kubernetes.io/instance=${HELM_RELEASE_NAME}" -o jsonpath="{.items[0].metadata.name}") && \
