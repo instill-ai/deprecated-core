@@ -28,14 +28,14 @@ RUN echo "Instill Core latest codebase cloned on ${CACHE_DATE}"
 
 WORKDIR /instill-ai
 
-RUN git clone https://github.com/instill-ai/vdp.git
+RUN git clone -b huitang/ins-3138 https://github.com/instill-ai/vdp.git
 RUN git clone https://github.com/instill-ai/model.git
 
 WORKDIR /instill-ai/core
 
 RUN git clone https://github.com/instill-ai/api-gateway.git
 RUN git clone https://github.com/instill-ai/mgmt-backend.git
-RUN git clone https://github.com/instill-ai/console.git
+RUN git clone -b temp-support-not-verify-reference-syntax https://github.com/instill-ai/console.git
 
 FROM alpine:${ALPINE_VERSION} AS release
 
@@ -50,7 +50,7 @@ RUN echo "Instill Core release codebase cloned on ${CACHE_DATE}"
 WORKDIR /instill-ai
 
 ARG INSTILL_VDP_VERSION INSTILL_MODEL_VERSION
-RUN git clone -b v${INSTILL_VDP_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/vdp.git
+RUN git clone -b huitang/ins-3138 -c advice.detachedHead=false https://github.com/instill-ai/vdp.git
 RUN git clone -b v${INSTILL_MODEL_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/model.git
 
 WORKDIR /instill-ai/core
@@ -58,4 +58,4 @@ WORKDIR /instill-ai/core
 ARG API_GATEWAY_VERSION MGMT_BACKEND_VERSION CONSOLE_VERSION
 RUN git clone -b v${API_GATEWAY_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/api-gateway.git
 RUN git clone -b v${MGMT_BACKEND_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/mgmt-backend.git
-RUN git clone -b v${CONSOLE_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/console.git
+RUN git clone -b temp-support-not-verify-reference-syntax -c advice.detachedHead=false https://github.com/instill-ai/console.git
