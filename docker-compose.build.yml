@@ -10,9 +10,6 @@ services:
         GOLANG_VERSION: 1.21.3
         ALPINE_VERSION: 3.18
         KRAKEND_CE_VERSION: ${KRAKEND_CE_VERSION}
-    profiles:
-      - all
-      - core
 
   mgmt_backend:
     image: ${MGMT_BACKEND_IMAGE}:${MGMT_BACKEND_VERSION}
@@ -22,16 +19,11 @@ services:
         SERVICE_NAME: ${MGMT_BACKEND_HOST}
         GOLANG_VERSION: ${GOLANG_VERSION}
         K6_VERSION: ${K6_VERSION}
-    profiles:
-      - all
-      - core
 
   console:
     image: ${CONSOLE_IMAGE}:${CONSOLE_VERSION}
     build:
       context: ./${CONSOLE_HOST}
-    profiles:
-      - all
 
   console_playwright:
     image: ${CONSOLE_IMAGE}-playwright:${CONSOLE_VERSION}
@@ -40,6 +32,3 @@ services:
       dockerfile: Dockerfile.playwright
       args:
         TEST_USER: "root"
-    profiles:
-      - all
-      - core

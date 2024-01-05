@@ -34,9 +34,6 @@ services:
       envsubst <config/.env.envsubst >config/.env &&
       make config &&
       krakend run -c krakend.json"
-    profiles:
-      - all
-      - core
 
   mgmt_backend_migrate:
     container_name: ${MGMT_BACKEND_HOST}-migrate
@@ -53,9 +50,6 @@ services:
     depends_on:
       pg_sql:
         condition: service_healthy
-    profiles:
-      - all
-      - core
 
   mgmt_backend_init:
     container_name: ${MGMT_BACKEND_HOST}-init
@@ -73,9 +67,6 @@ services:
     depends_on:
       mgmt_backend_migrate:
         condition: service_completed_successfully
-    profiles:
-      - all
-      - core
 
   mgmt_backend:
     container_name: ${MGMT_BACKEND_HOST}
@@ -100,9 +91,6 @@ services:
     depends_on:
       mgmt_backend_init:
         condition: service_completed_successfully
-    profiles:
-      - all
-      - core
 
   mgmt_backend_worker:
     container_name: ${MGMT_BACKEND_HOST}-worker
@@ -127,9 +115,6 @@ services:
     depends_on:
       mgmt_backend_init:
         condition: service_completed_successfully
-    profiles:
-      - all
-      - core
 
   console:
     container_name: ${CONSOLE_HOST}
@@ -149,8 +134,6 @@ services:
     ports:
       - ${CONSOLE_PORT}:3000
     entrypoint: ./entrypoint.sh
-    profiles:
-      - all
 
   pg_sql:
     container_name: ${POSTGRESQL_HOST}
@@ -162,9 +145,6 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       timeout: 20s
       retries: 10
-    profiles:
-      - all
-      - core
 
   elasticsearch:
     container_name: ${ELASTICSEARCH_HOST}
@@ -180,9 +160,6 @@ services:
       - xpack.security.enabled=false
     volumes:
       - /var/lib/elasticsearch/data
-    profiles:
-      - all
-      - core
 
   temporal:
     container_name: temporal
@@ -206,9 +183,6 @@ services:
     depends_on:
       - pg_sql
       - elasticsearch
-    profiles:
-      - all
-      - core
 
   temporal_ui:
     container_name: ${TEMPORAL_UI_HOST}
@@ -220,9 +194,6 @@ services:
       - ${TEMPORAL_UI_PORT}:8080
     depends_on:
       - temporal
-    profiles:
-      - all
-      - core
 
   redis:
     container_name: ${REDIS_HOST}
@@ -230,9 +201,6 @@ services:
     restart: unless-stopped
     environment:
       ALLOW_EMPTY_PASSWORD: "true"
-    profiles:
-      - all
-      - core
 
   redoc_openapi:
     container_name: redoc-openapi
@@ -241,9 +209,6 @@ services:
       - SPEC_URL=https://raw.githubusercontent.com/instill-ai/protobufs/main/openapiv2/openapiv2.swagger.yaml
     ports:
       - ${REDOC_OPENAPI_PORT}:80
-    profiles:
-      - all
-      - core
 
   etcd:
     container_name: ${ETCD_HOST}
@@ -261,9 +226,6 @@ services:
       ETCDCTL_API: ${ETCDCTL_API}
       ETCD_AUTO_COMPACTION_MODE: ${ETCD_AUTO_COMPACTION_MODE}
       ETCD_AUTO_COMPACTION_RETENTION: ${ETCD_AUTO_COMPACTION_RETENTION}
-    profiles:
-      - all
-      - core
 
   influxdb:
     container_name: ${INFLUXDB_HOST}
@@ -281,9 +243,6 @@ services:
       - ${OBSERVE_CONFIG_DIR_PATH}/influxdb:/docker-entrypoint-initdb.d
     ports:
       - ${INFLUXDB_PORT}:8086
-    profiles:
-      - all
-      - core
 
   openfga_createdb:
     depends_on:
@@ -294,9 +253,6 @@ services:
     command: bash -c 'createdb -h ${POSTGRESQL_HOST} -U postgres -w openfga || true'
     environment:
       PGPASSWORD: password
-    profiles:
-      - all
-      - core
 
   openfga_migrate:
     depends_on:
@@ -308,9 +264,6 @@ services:
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:password@${POSTGRESQL_HOST}:${POSTGRESQL_PORT}/openfga?sslmode=disable
-    profiles:
-      - all
-      - core
 
   openfga:
     depends_on:
@@ -323,9 +276,6 @@ services:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://postgres:password@${POSTGRESQL_HOST}:${POSTGRESQL_PORT}/openfga?sslmode=disable
     command: run
-    profiles:
-      - all
-      - core
 
   temporal_admin_tools_core:
     container_name: temporal-admin-tools-core
@@ -336,6 +286,3 @@ services:
     entrypoint: ["/bin/bash", "-c"]
     command: |
       'if [[ ! $(tctl --namespace mgmt-backend namespace list | grep mgmt-backend) ]]; then tctl --namespace mgmt-backend namespace register; fi'
-    profiles:
-      - all
-      - core
