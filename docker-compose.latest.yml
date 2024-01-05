@@ -10,6 +10,7 @@ services:
       - controller-vdp
       - model
       - controller-model
+      - core
     image: ${API_GATEWAY_IMAGE}:latest
     environment:
       API_GATEWAY_LOG_LEVEL: DEBUG
@@ -23,6 +24,7 @@ services:
       - controller-vdp
       - model
       - controller-model
+      - core
     image: ${MGMT_BACKEND_IMAGE}:latest
 
   mgmt_backend_init:
@@ -34,6 +36,7 @@ services:
       - controller-vdp
       - model
       - controller-model
+      - core
     image: ${MGMT_BACKEND_IMAGE}:latest
 
   mgmt_backend:
@@ -45,6 +48,7 @@ services:
       - controller-vdp
       - model
       - controller-model
+      - core
     image: ${MGMT_BACKEND_IMAGE}:latest
     environment:
       CFG_SERVER_DEBUG: "true"
@@ -62,6 +66,7 @@ services:
       - controller-vdp
       - model
       - controller-model
+      - core
     image: ${MGMT_BACKEND_IMAGE}:latest
     environment:
       CFG_SERVER_DEBUG: "true"
