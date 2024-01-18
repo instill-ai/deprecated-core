@@ -18,6 +18,7 @@ services:
       - controller-vdp
       - model
       - controller-model
+      - mgmt
 
   mgmt_backend:
     image: ${MGMT_BACKEND_IMAGE}:${MGMT_BACKEND_VERSION}
@@ -47,6 +48,7 @@ services:
       - controller-vdp
       - model
       - controller-model
+      - mgmt
 
   console_playwright:
     image: ${CONSOLE_IMAGE}-playwright:${CONSOLE_VERSION}
@@ -63,3 +65,4 @@ services:
       - controller-vdp
       - model
       - controller-model
+      - mgmt
