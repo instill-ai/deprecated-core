@@ -44,10 +44,11 @@ jobs:
           docker ps -a
           sleep 60
 
-      - name: Probe to core (influxdb, temporal and console) healthcheck endpoint
+      - name: Probe to core (influxdb, temporal, etcd, and console) healthcheck endpoint
         run: |
           curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:8086/health
           curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:8088/health
+          curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:3379/health
           curl -s -o /dev/null -w ''%{http_code}'\n' http://localhost:3000
 
       - name: Probe to core services healthcheck endpoint
