@@ -63,7 +63,6 @@ all:			## Launch all services with their up-to-date release version
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
 			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
-			-e BUILD=${BUILD} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
 			--name ${CONTAINER_COMPOSE_NAME}-release \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
@@ -80,7 +79,6 @@ all:			## Launch all services with their up-to-date release version
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
 			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
-			-e BUILD=${BUILD} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
 			--name ${CONTAINER_COMPOSE_NAME}-release \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:${INSTILL_CORE_VERSION} /bin/sh -c " \
@@ -93,7 +91,7 @@ all:			## Launch all services with their up-to-date release version
 
 .PHONY: latest
 latest:			## Lunch all dependent services with their latest codebase
-	@make build-latest
+	@make build-latest PROFILE=${PROFILE}
 	@if [ ! -f "$$(echo ${SYSTEM_CONFIG_PATH}/user_uid)" ]; then \
 		mkdir -p ${SYSTEM_CONFIG_PATH} && \
 		docker run --rm --name uuidgen ${CONTAINER_COMPOSE_IMAGE_NAME}:latest uuidgen > ${SYSTEM_CONFIG_PATH}/user_uid; \
@@ -106,14 +104,12 @@ latest:			## Lunch all dependent services with their latest codebase
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
 			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
-			-e BUILD=${BUILD} \
-			-e PROFILE=${PROFILE} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
 			--name ${CONTAINER_COMPOSE_NAME}-latest \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
 				cp /instill-ai/vdp/.env $${TMP_CONFIG_DIR}/.env && \
 				cp /instill-ai/vdp/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
-				/bin/sh -c 'cd /instill-ai/vdp && make latest BUILD=${BUILD} PROFILE=$${PROFILE} EDITION=$${EDITION:=local-ce:latest} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
+				/bin/sh -c 'cd /instill-ai/vdp && make latest PROFILE=${PROFILE} EDITION=$${EDITION:=local-ce:latest} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
 				/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}; \
 	fi
@@ -124,14 +120,12 @@ latest:			## Lunch all dependent services with their latest codebase
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
 			-v $${SYSTEM_CONFIG_PATH}:$${SYSTEM_CONFIG_PATH} \
-			-e BUILD=${BUILD} \
-			-e PROFILE=${PROFILE} \
 			-e BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} \
 			--name ${CONTAINER_COMPOSE_NAME}-latest \
 			${CONTAINER_COMPOSE_IMAGE_NAME}:latest /bin/sh -c " \
 				cp /instill-ai/model/.env $${TMP_CONFIG_DIR}/.env && \
 				cp /instill-ai/model/docker-compose.build.yml $${TMP_CONFIG_DIR}/docker-compose.build.yml && \
-				/bin/sh -c 'cd /instill-ai/model && make latest BUILD=${BUILD} PROFILE=$${PROFILE} EDITION=$${EDITION:=local-ce:latest} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
+				/bin/sh -c 'cd /instill-ai/model && make latest PROFILE=${PROFILE} EDITION=$${EDITION:=local-ce:latest} BUILD_CONFIG_DIR_PATH=$${TMP_CONFIG_DIR} SYSTEM_CONFIG_PATH=$${SYSTEM_CONFIG_PATH}' && \
 				/bin/sh -c 'rm -rf $${TMP_CONFIG_DIR}/*' \
 		" && rm -rf $${TMP_CONFIG_DIR}; \
 	fi
@@ -219,7 +213,7 @@ build-latest:				## Build latest images for all Instill Core components
 			API_GATEWAY_VERSION=latest \
 			MGMT_BACKEND_VERSION=latest \
 			CONSOLE_VERSION=latest \
-			docker compose -f docker-compose.build.yml build --progress plain \
+			COMPOSE_PROFILES=${PROFILE} docker compose -f docker-compose.build.yml build --progress plain \
 		"
 
 .PHONY: build-release
@@ -245,12 +239,12 @@ build-release:				## Build release images for all Instill Core components
 			API_GATEWAY_VERSION=${API_GATEWAY_VERSION} \
 			MGMT_BACKEND_VERSION=${MGMT_BACKEND_VERSION} \
 			CONSOLE_VERSION=${CONSOLE_VERSION} \
-			docker compose -f docker-compose.build.yml build --progress plain \
+			COMPOSE_PROFILES=${PROFILE} docker compose -f docker-compose.build.yml build --progress plain \
 		"
 
 .PHONY: integration-test-latest
 integration-test-latest:			## Run integration test on the latest Instill Core
-	@make latest BUILD=true PROJECT=core EDITION=local-ce:test
+	@make latest PROJECT=core EDITION=local-ce:test
 	@docker run --rm \
 		--network instill-network \
 		--name ${CONTAINER_BACKEND_INTEGRATION_TEST_NAME}-latest \
