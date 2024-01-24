@@ -50,7 +50,7 @@ RUN echo "Instill Core release codebase cloned on ${CACHE_DATE}"
 WORKDIR /instill-ai
 
 ARG INSTILL_VDP_VERSION INSTILL_MODEL_VERSION
-RUN git clone -b v${INSTILL_VDP_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/vdp.git
+RUN git clone -b poc/0124 -c advice.detachedHead=false https://github.com/instill-ai/vdp.git
 RUN git clone -b v${INSTILL_MODEL_VERSION} -c advice.detachedHead=false https://github.com/instill-ai/model.git
 
 WORKDIR /instill-ai/core
