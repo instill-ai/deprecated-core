@@ -324,7 +324,7 @@ endif
 
 .PHONY: console-integration-test-latest
 console-integration-test-latest:			## Run console integration test on the latest Instill Core
-	@make latest PROJECT=core EDITION=local-ce:test
+	@make latest PROJECT=core EDITION=local-ce:test INSTILL_CORE_HOST=api-gateway
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
@@ -365,7 +365,7 @@ console-integration-test-latest:			## Run console integration test on the latest
 
 .PHONY: console-integration-test-release
 console-integration-test-release:			## Run console integration test on the release Instill Core
-	@make all PROJECT=core EDITION=local-ce:test
+	@make all PROJECT=core EDITION=local-ce:test INSTILL_CORE_HOST=api-gateway
 	@export TMP_CONFIG_DIR=$(shell mktemp -d) && docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $${TMP_CONFIG_DIR}:$${TMP_CONFIG_DIR} \
