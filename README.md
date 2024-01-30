@@ -25,7 +25,7 @@ Execute the following commands to pull pre-built images with all the dependencie
 
 <!-- x-release-please-start-version -->
 ```bash
-$ git clone -b v0.10.0-beta https://github.com/instill-ai/core.git && cd core
+$ git clone -b v0.11.0-beta https://github.com/instill-ai/core.git && cd core
 
 # Launch all services
 $ make all
