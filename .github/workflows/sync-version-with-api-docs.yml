@@ -31,7 +31,7 @@ jobs:
       with:
         token: ${{ secrets.botGitHubToken }}
         commit-message: 'chore: update API version'
-        title: 'chore: update API version'
+        title: 'docs(openapi): Update API version'
         body: Sync API version with latest Core release
         branch: chore/update-api-version
         base: main
