@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.1-beta](https://github.com/instill-ai/core/compare/v0.11.0-beta...v0.11.1-beta) (2024-02-06)
+
+
+### Bug Fixes
+
+* **openapi:** Fix protobufs PR name ([#113](https://github.com/instill-ai/core/issues/113)) ([d47edce](https://github.com/instill-ai/core/commit/d47edce3ddec31f92a2b41c6385cb0e17a5c28c4))
+
+
+### Miscellaneous Chores
+
+* release v0.11.1-beta ([9cb18db](https://github.com/instill-ai/core/commit/9cb18db19a240c1eaab5ba219b5d83bc9299ed42))
+
 ## [0.11.0-beta](https://github.com/instill-ai/core/compare/v0.10.0-beta...v0.11.0-beta) (2024-01-30)
 
 
