@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> This repository has been deprecated and is only intended for launching Instill Core projects up to version `v0.12.0-beta`. Check the latest Instill Core project in the [instill-ai/core](https://github.com/instill-ai/core).
+> This repository has been deprecated and is only intended for launching Instill Core projects up to version `v0.12.0-beta`. Please note that `make latest` will fail, but `make all` will still function. For archival purposes, please use released versions to run `make all`. Check the latest Instill Core project in the [instill-ai/core](https://github.com/instill-ai/core) repository.
 
 # Instill Core (Deprecated)
 
@@ -42,23 +42,12 @@ Execute the following commands to pull pre-built images with all the dependencie
 
 <!-- x-release-please-start-version -->
 ```bash
-$ git clone -b v0.12.0-beta https://github.com/instill-ai/core.git && cd core
+$ git clone -b v0.12.0-beta https://github.com/instill-ai/deprecated-core.git && cd deprecated-core
 
 # Launch all services
 $ make all
 ```
 <!-- x-release-please-end -->
-
-**Use the latest version for local development**
-
-Execute the following commands to build images with all the dependencies to launch:
-
-```bash
-$ git clone https://github.com/instill-ai/core.git && cd core
-
-# Launch all services
-$ make latest PROFILE=all
-```
 
 🚀 That's it! Once all the services are up with health status, the UI is ready to go at http://localhost:3000. Please find the default login credentials in the [documentation](https://www.instill.tech/docs/latest/quickstart#self-hosted-instill-core).
 
