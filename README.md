@@ -66,3 +66,7 @@ To shut down all running services:
 ```
 $ make down
 ```
+
+## License
+
+See the [LICENSE](./LICENSE) file for licensing information.
