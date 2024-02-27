@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> This repository has been deprecated and is only intended for launching Instill Core projects up to version `v0.12.0-beta`. Please note that `make latest` will fail, but `make all` will still function. For archival purposes, please use released versions to run `make all`. Check the latest Instill Core project in the [instill-ai/core](https://github.com/instill-ai/core) repository.
+> This repository has been deprecated and is intended only for launching Instill Core projects up to version `v0.12.0-beta`. Check the latest Instill Core project in the [instill-ai/instill-core](https://github.com/instill-ai/instill-core) repository.
 
 # Instill Core (Deprecated)
 
@@ -18,22 +18,6 @@ Explore **🔮 Instill Core**, the open-source orchestrator comprising a collect
 - **Docker and Docker Compose** - Instill Core uses Docker Compose (specifically, `Compose V2` and `Compose specification`) to run all services locally. Please install the latest stable [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) before using Instill Core.
 
 ## Quick start
-
-**Preparing to launch old Instill Core**
-
-Before executing `make all` or `make latest`, ensure to replace the following lines in the [Dockerfile](/Dockerfile):
-
-```Dockerfile
-RUN git clone https://github.com/instill-ai/vdp.git
-RUN git clone https://github.com/instill-ai/model.git
-```
-
-with:
-
-```Dockerfile
-RUN git clone https://github.com/instill-ai/deprecated-vdp.git
-RUN git clone https://github.com/instill-ai/deprecated-model.git
-```
 
 **Use stable release version**
 
