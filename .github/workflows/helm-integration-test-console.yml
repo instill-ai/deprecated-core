@@ -110,8 +110,8 @@ jobs:
             --set edition=k8s-ce:test \
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
+            --set rayService.image.tag=latest \
             --set itMode.enabled=true \
-            --set ray.platform=cpu \
             --set tags.observability=false
 
       - name: Run console integration test (latest)
@@ -291,8 +291,8 @@ jobs:
             --set edition=k8s-ce:test \
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
+            --set rayService.image.tag=latest \
             --set itMode.enabled=true \
-            --set ray.platform=arm \
             --set tags.observability=false
 
       - name: Run console integration test (latest)
@@ -431,8 +431,8 @@ jobs:
             --set edition=k8s-ce:test \
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
+            --set rayService.image.tag=latest \
             --set itMode.enabled=true \
-            --set ray.platform=cpu \
             --set tags.observability=false
 
       - name: Run console integration test (release)
@@ -455,7 +455,7 @@ jobs:
 
   helm-integration-test-release-mac:
     if: false
-    # disable the mac test temporary 
+    # disable the mac test temporary
     # if: inputs.target == 'release'
     runs-on: [self-hosted, macOS, core]
     timeout-minutes: 30
@@ -612,8 +612,8 @@ jobs:
             --set edition=k8s-ce:test \
             --set modelBackend.image.tag=latest \
             --set controllerModel.image.tag=latest \
+            --set rayService.image.tag=latest \
             --set itMode.enabled=true \
-            --set ray.platform=arm \
             --set tags.observability=false
 
       - name: Run console integration test (release)
