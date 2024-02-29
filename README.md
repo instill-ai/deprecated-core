@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> This repository has been deprecated and is intended only for launching Instill Core projects up to version `v0.12.0-beta`. Check the latest Instill Core project in the [instill-ai/instill-core](https://github.com/instill-ai/instill-core) repository.
+> This repository has been deprecated and is intended only for launching Instill Core projects up to version `v0.13.0-beta`. Check the latest Instill Core project in the [instill-ai/instill-core](https://github.com/instill-ai/instill-core) repository.
 
 # Instill Core (Deprecated)
 
