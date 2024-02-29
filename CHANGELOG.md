@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0-beta](https://github.com/instill-ai/deprecated-core/compare/v0.12.0-beta...v0.13.0-beta) (2024-02-29)
+
+
+### Miscellaneous Chores
+
+* release v0.13.0-beta ([2ba64a5](https://github.com/instill-ai/deprecated-core/commit/2ba64a5e57ef76fc3b50a8c0ddb3f21519dd014a))
+
 ## [0.12.0-beta](https://github.com/instill-ai/core/compare/v0.11.1-beta...v0.12.0-beta) (2024-02-16)
 
 
